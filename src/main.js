@@ -98,6 +98,11 @@ window.onload = () => {
             ctx.fill();
         }
         update() {
+            // handle wall collisions
+            // if there is a wall collision:
+            // 1. get angle of player relative to the wall they're approaching 
+            // 2. remove all velocity
+            // 3. apply negative velocity to bounch player off wall
 
             let r0 = (this.angle * Math.PI) / 180;
             // accelerate if there is movement input
