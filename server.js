@@ -10,7 +10,6 @@ const io = new Server(server);
 const game_vars = {
     width: 600,
     height: 600,
-    cell_size: 25
 }
 
 // Http request Handler

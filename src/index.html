@@ -1,16 +1,25 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Tron</title>
+        <title>Space War</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@800&display=swap" rel="stylesheet">
         <script src="/socket.io/socket.io.js"></script>
         <!-- <script src="https://cdn.socket.io/4.5.4/socket.io.min.js" integrity="sha384-/KNQL8Nu5gCHLqwqfQjA689Hhoqgi2S84SNUxC3roTe4EhJ9AfLkp8QiQcU8AMzI" crossorigin="anonymous"></script> -->
         <script src="main.js"></script>
         <link rel="stylesheet" href="styles.css">
     </head>
     <body>
-        <h1>Tron</h1>
-        <canvas id="tron"></canvas>
-        <br>
-        <button id="join-btn">Join</button>
+        <div id="wrapper">
+            <div id="game-container">
+                <h1 id="title">Space War</h1>
+                <canvas id="tron"></canvas>
+                <br>
+                <button id="join-btn">Join</button>
+            </div>
+        </div>
+        
+        
     </body>
 </html>
