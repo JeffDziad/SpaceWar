@@ -9,6 +9,11 @@ body {
     font-size: 50px;
 }
 
+#space-war {
+    border: white solid 5px;
+    border-radius: 25px;
+}
+
 #join-btn {
     font-size: 25px;
 }

@@ -1,7 +1,7 @@
 window.onload = () => {
 
     const socket = io(),
-        canvas = document.getElementById('tron'),
+        canvas = document.getElementById('space-war'),
         ctx = canvas.getContext('2d'),
         joinBtn = document.getElementById('join-btn');
         joinBtn.addEventListener('click', joinGame);
@@ -52,6 +52,8 @@ window.onload = () => {
                 x: 0,
                 y: 0 
             }
+            this.rotate_speed = 3;
+            this.acc_speed = 0.1;
             this.drag = 0.99;
             this.initEvents();
         }
@@ -97,26 +99,42 @@ window.onload = () => {
         }
         update() {
 
-            
+            let r0 = (this.angle * Math.PI) / 180;
             // accelerate if there is movement input
             if(this.forward && !this.reverse) {
                 // move forward
+                this.acc.x = Math.cos(r0) * this.acc_speed;
+                this.acc.y = Math.sin(r0) * this.acc_speed;
 
             } else if(this.reverse && !this.forward) {
                 // move in reverse
-
+                this.acc.x = -(Math.cos(r0) * this.acc_speed);
+                this.acc.y = -(Math.sin(r0) * this.acc_speed);
             }
             if(this.left && !this.right) {
                 // rotate left
+                this.angle -= this.rotate_speed;
 
             } else if(this.right && !this.left) {
                 // rorate right
-
+                this.angle += this.rotate_speed;
             }
 
-            this.pos.x += this.vel;
+            // apply acceleration to velocity
+            this.vel.x += this.acc.x;
+            this.vel.y += this.acc.y;
 
-            this.acc = 0;
+            // apply drag to velocity
+            this.vel.x *= 0.99;
+            this.vel.y *= 0.99;
+
+            // update position
+            this.pos.x += this.vel.x;
+            this.pos.y += this.vel.y;
+
+            // reset acceleration
+            this.acc.x = 0;
+            this.acc.y = 0;
             
             this.draw();
         }
@@ -152,7 +170,6 @@ window.onload = () => {
 
     function animate() {
         bgFill('black');
-        strokeBounds('white')
         if(player) player.update();
         requestAnimationFrame(animate);
     }

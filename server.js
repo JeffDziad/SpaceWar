@@ -8,8 +8,8 @@ const { Server } = require('socket.io');
 const io = new Server(server);
 
 const game_vars = {
-    width: 600,
-    height: 600,
+    width: 800,
+    height: 800,
 }
 
 // Http request Handler
