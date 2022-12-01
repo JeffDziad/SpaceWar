@@ -145,6 +145,10 @@ window.onload = () => {
     }
 
     function joinGame() {
+        // 1. Prompt for player name, choose color
+        // -- once submitted check if name is already in use, if so ask for new name
+        // -- upon successful submit, hide join button and display leaderboard
+        // 2. add player
         player = new Player(width/2, height/2);
     }
 
