@@ -25,14 +25,14 @@ window.onload = () => {
     }
 
     class Player {
-        constructor(iX, iY) {
+        constructor(iX, iY, body_color) {
             // equilateral triangle
             this.radius = 25;
             this.angle = 0;
 
             // general variables
             this.colors = {
-                body: "blue",
+                body: body_color,
             };
             this.pos = {
                 x: iX,
@@ -154,7 +154,9 @@ window.onload = () => {
         // -- once submitted check if name is already in use, if so ask for new name
         // -- upon successful submit, hide join button and display leaderboard
         // 2. add player
-        player = new Player(width/2, height/2);
+
+        // default test player
+        player = new Player(width/2, height/2, "blue");
     }
 
     function rand(min, max) {
