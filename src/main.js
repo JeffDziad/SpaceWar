@@ -124,9 +124,9 @@ window.onload = () => {
             this.vel.x += this.acc.x;
             this.vel.y += this.acc.y;
 
-            // apply drag to velocity
-            this.vel.x *= 0.99;
-            this.vel.y *= 0.99;
+            // apply drag to velocity - slows player after no input
+            this.vel.x *= this.drag;
+            this.vel.y *= this.drag;
 
             // update position
             this.pos.x += this.vel.x;
