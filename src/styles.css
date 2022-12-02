@@ -12,9 +12,23 @@ body {
 #space-war {
     border: white solid 5px;
     border-radius: 25px;
+    margin: auto;
+}
+
+#join-container {
+    display: inline-block;
+}
+
+#leaderboard-container {
+    color: white;
+    display: none;
 }
 
 #join-btn {
+    border: white solid 5px;
+    border-radius: 25px;
+    color: white;
+    background-color: black;
     font-size: 25px;
 }
 
@@ -24,4 +38,18 @@ body {
     display: flex;
     justify-content: center;
     align-content: center;
+}
+
+#game-centered {
+    display: none;
+}
+
+#game-loading {
+    animation: arcspin 1.5s linear infinite;
+}
+
+@keyframes arcspin {
+    100% {
+        transform: rotate(360deg);
+    }
 }

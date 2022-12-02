@@ -1,10 +1,15 @@
 window.onload = () => {
 
+    // Game Constants
     const socket = io(),
         canvas = document.getElementById('space-war'),
         ctx = canvas.getContext('2d'),
         joinBtn = document.getElementById('join-btn');
         joinBtn.addEventListener('click', joinGame);
+
+    // HTML Constants
+    const game_loading = document.getElementById('game-loading'),
+        game_centered = document.getElementById('game-centered');
         
     let width, 
         height, 
@@ -193,6 +198,9 @@ window.onload = () => {
     }
 
     function init() {
+        // 1. Make canvas visible, hide loading spinner
+        game_loading.style.display = 'none';
+        game_centered.style.display = 'inline-block';
         animate();
     }
 
