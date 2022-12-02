@@ -33,6 +33,7 @@ window.onload = () => {
             // general variables
             this.colors = {
                 body: body_color,
+                front_indicator: "white",
             };
             this.pos = {
                 x: iX,
@@ -94,7 +95,7 @@ window.onload = () => {
                 x: this.pos.x + Math.cos(r3) * this.radius,
                 y: this.pos.y + Math.sin(r3) * this.radius
             };
-            // draw point positions
+            // draw point positions - body triangle
             ctx.fillStyle = this.colors.body;
             ctx.beginPath();
             ctx.moveTo(this.points.p1.x, this.points.p1.y);
@@ -102,6 +103,13 @@ window.onload = () => {
             ctx.lineTo(this.points.p3.x, this.points.p3.y);
             ctx.lineTo(this.points.p1.x, this.points.p1.y);
             ctx.fill();
+            // draw front indicator - line from center to head
+            ctx.strokeWeight = 2;
+            ctx.strokeStyle = this.colors.front_indicator;
+            ctx.beginPath();
+            ctx.moveTo(this.pos.x, this.pos.y);
+            ctx.lineTo(this.points.p1.x, this.points.p1.y);
+            ctx.stroke();
         }
         update() {
             let r0 = (this.angle * Math.PI) / 180;
@@ -159,24 +167,24 @@ window.onload = () => {
                 let p = this.points[prop]; // { x, y }
                 if(p.x > width) {
                     this.vel.x = 0;
-                    this.pos.x = p.x-this.radius;
+                    this.pos.x = this.pos.x-1;
                     
                     this.applyForce(-this.wall_force, 0);
 
                 } else if(p.x <= 0) {
                     this.vel.x = 0;
-                    this.pos.x = p.x+this.radius;
+                    this.pos.x = this.pos.x+1;
                     
                     this.applyForce(this.wall_force, 0);
                 }
                 if(p.y > height) {
                     this.vel.y = 0;
-                    this.pos.y = p.y-this.radius;
+                    this.pos.y = this.pos.y-1;
                     
                     this.applyForce(0, -this.wall_force);
                 } else if(p.y <= 0) {
                     this.vel.y = 0;
-                    this.pos.y = p.y+this.radius;
+                    this.pos.y = this.pos.y+1;
                     
                     this.applyForce(0, this.wall_force);
                 }
