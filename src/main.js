@@ -38,6 +38,11 @@ window.onload = () => {
                 x: iX,
                 y: iY
             };
+            this.points = {
+                p1: 0, 
+                p2: 0,
+                p3: 0
+            };
             this.dirs = {
                 foward: false,
                 reverse: false,
@@ -47,14 +52,15 @@ window.onload = () => {
             this.vel = {
                 x: 0,
                 y: 0
-            }
+            };
             this.acc = {
                 x: 0,
                 y: 0 
-            }
+            };
             this.rotate_speed = 3;
             this.acc_speed = 0.1;
             this.drag = 0.99;
+            this.wall_force = 1;
             this.initEvents();
         }
         initEvents() {
@@ -74,36 +80,30 @@ window.onload = () => {
         draw() {
             // calculate point positions
             let r1 = (this.angle * Math.PI) / 180;
-            let p1 = {
+            this.points.p1 = {
                 x: this.pos.x + Math.cos(r1) * this.radius,
                 y: this.pos.y + Math.sin(r1) * this.radius
             };
             let r2 = ((this.angle + 120) * Math.PI) / 180;
-            let p2 = {
+            this.points.p2 = {
                 x: this.pos.x + Math.cos(r2) * this.radius,
                 y: this.pos.y + Math.sin(r2) * this.radius
             };
             let r3 = ((this.angle + 240) * Math.PI) / 180;
-            let p3 = {
+            this.points.p3 = {
                 x: this.pos.x + Math.cos(r3) * this.radius,
                 y: this.pos.y + Math.sin(r3) * this.radius
             };
             // draw point positions
             ctx.fillStyle = this.colors.body;
             ctx.beginPath();
-            ctx.moveTo(p1.x, p1.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.lineTo(p3.x, p3.y);
-            ctx.lineTo(p1.x, p1.y);
+            ctx.moveTo(this.points.p1.x, this.points.p1.y);
+            ctx.lineTo(this.points.p2.x, this.points.p2.y);
+            ctx.lineTo(this.points.p3.x, this.points.p3.y);
+            ctx.lineTo(this.points.p1.x, this.points.p1.y);
             ctx.fill();
         }
         update() {
-            // handle wall collisions
-            // if there is a wall collision:
-            // 1. get angle of player relative to the wall they're approaching 
-            // 2. remove all velocity
-            // 3. apply negative velocity to bounch player off wall
-
             let r0 = (this.angle * Math.PI) / 180;
             // accelerate if there is movement input
             if(this.forward && !this.reverse) {
@@ -140,8 +140,47 @@ window.onload = () => {
             // reset acceleration
             this.acc.x = 0;
             this.acc.y = 0;
+
+            this.wallCollisions();
             
             this.draw();
+        }
+        applyForce(x=0, y=0) {
+            this.acc.x += x;
+            this.acc.y += y;
+        }
+        wallCollisions() {
+            // handle wall collisions
+            // if there is a wall collision:
+            // 1. get angle of player relative to the wall they're approaching 
+            // 2. remove all velocity
+            // 3. apply negative velocity to bounch player off wall
+            for(const prop in this.points) {
+                let p = this.points[prop]; // { x, y }
+                if(p.x > width) {
+                    this.vel.x = 0;
+                    this.pos.x = p.x-this.radius;
+                    
+                    this.applyForce(-this.wall_force, 0);
+
+                } else if(p.x <= 0) {
+                    this.vel.x = 0;
+                    this.pos.x = p.x+this.radius;
+                    
+                    this.applyForce(this.wall_force, 0);
+                }
+                if(p.y > height) {
+                    this.vel.y = 0;
+                    this.pos.y = p.y-this.radius;
+                    
+                    this.applyForce(0, -this.wall_force);
+                } else if(p.y <= 0) {
+                    this.vel.y = 0;
+                    this.pos.y = p.y+this.radius;
+                    
+                    this.applyForce(0, this.wall_force);
+                }
+            }
         }
     }
 

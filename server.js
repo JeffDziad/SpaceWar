@@ -8,7 +8,7 @@ const { Server } = require('socket.io');
 const io = new Server(server);
 
 const game_vars = {
-    width: 800,
+    width: 1000,
     height: 800,
 }
 
