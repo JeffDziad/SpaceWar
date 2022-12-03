@@ -3,18 +3,17 @@ window.onload = () => {
     // Game Constants
     const socket = io(),
         canvas = document.getElementById('space-war'),
-        ctx = canvas.getContext('2d'),
-        joinBtn = document.getElementById('join-btn');
-        joinBtn.addEventListener('click', joinGame);
+        ctx = canvas.getContext('2d');
 
     // HTML Constants
-    const game_loading = document.getElementById('game-loading'),
-        game_centered = document.getElementById('game-centered');
+    const game_centered = document.getElementById('game-centered'),
+        join_form = document.getElementById('join-form'),
+        join_btn = document.getElementById('join-btn');
+        join_btn.addEventListener('click', joinGame);
         
     let width, 
         height, 
         player, 
-        thrust_particles = [];
         opponents = [];
 
     socket.on('game_init', (data) => {
@@ -24,65 +23,6 @@ window.onload = () => {
         height = canvas.height = d.height;
         init();
     });
-
-    class Particle {
-        // All particles are arcs
-        // originX, originY - where the particle is emitted
-        // iVelObj, iAccObj ({x, y}) - the initial values of velocity and acceleration
-        // isPersistent, lifetimeMS - is the particle lifetime infinite or is it finite with a given lifetime in milliseconds. 
-        // lifetimeFunc, lifetimeFuncDelayMS - is there a function that runs and modifys the particles features throughout its lifetime and if so, how often does it run.
-        constructor(id, originX, originY, colorRGB, radius, iVelObj, iAccObj, fade, fadeDelay) {
-            this.created = performance.now();
-            this.recent = this.created;
-            this.color = colorRGB;
-            this.radius = radius;
-            this.fade = fade;
-            this.fade_delay = fadeDelay;
-            this.color_alpha = 1;
-            this.pos = {
-                x: originX,
-                y: originY
-            };
-            this.vel = {
-                x: iVelObj.x,
-                y: iVelObj.y
-            };
-            this.acc = {
-                x: iAccObj.x,
-                y: iAccObj.y
-            };
-        }
-        draw() {
-            console.log('draw')
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2*Math.PI);
-            ctx.fill();
-        }
-        checkBounds() {
-            //! DANGER
-            
-        }
-        update() {
-            //// apply acceleration to velocity
-            // this.vel.x += this.acc.x;
-            // this.vel.y += this.acc.y;
-
-            // // apply drag to velocity - slows player after no input
-            // this.vel.x *= this.drag;
-            // this.vel.y *= this.drag;
-
-            // // update position
-            this.pos.x += this.vel.x;
-            this.pos.y += this.vel.y;
-
-            // // reset acceleration
-            // this.acc.x = 0;
-            // this.acc.y = 0;
-            this.draw();
-            this.checkBounds();
-        }
-    }
 
     class Opponent {
         constructor() {
@@ -180,6 +120,7 @@ window.onload = () => {
             ctx.stroke();
         }
         draw_thrust() {
+            //? Implement thrust particles later, should be encapsulated in player class. 
             // if((performance.now() - this.recent) > this.thrust_delay) {
             //     let dist_mag = 1;
             //     let distX = this.points.p3.x - this.points.p2.x,
@@ -235,7 +176,6 @@ window.onload = () => {
             this.acc.y = 0;
 
             this.wallCollisions();
-            
             this.draw();
         }
         applyForce(x=0, y=0) {
@@ -253,24 +193,19 @@ window.onload = () => {
                 if(p.x > width) {
                     this.vel.x = 0;
                     this.pos.x = this.pos.x-1;
-                    
                     this.applyForce(-this.wall_force, 0);
-
                 } else if(p.x <= 0) {
                     this.vel.x = 0;
                     this.pos.x = this.pos.x+1;
-                    
                     this.applyForce(this.wall_force, 0);
                 }
                 if(p.y > height) {
                     this.vel.y = 0;
                     this.pos.y = this.pos.y-1;
-                    
                     this.applyForce(0, -this.wall_force);
                 } else if(p.y <= 0) {
                     this.vel.y = 0;
                     this.pos.y = this.pos.y+1;
-                    
                     this.applyForce(0, this.wall_force);
                 }
             }
@@ -279,16 +214,19 @@ window.onload = () => {
 
     function init() {
         // 1. Make canvas visible, hide loading spinner
-        game_loading.style.display = 'none';
+        //game_loading.style.display = 'none';
         game_centered.style.display = 'inline-block';
         animate();
     }
 
     function joinGame() {
         // 1. Prompt for player name, choose color
+        join_btn.style.display = "none";
+        join_form.style.display = "inline-block";
         // -- once submitted check if name is already in use, if so ask for new name
         // -- upon successful submit, hide join button and display leaderboard
         // 2. add player
+
 
         // default test player
         player = new Player(width/2, height/2, "blue");
@@ -323,7 +261,3 @@ window.onload = () => {
     }
 
 }
-
-
-
-
