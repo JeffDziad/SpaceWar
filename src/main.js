@@ -14,14 +14,75 @@ window.onload = () => {
     let width, 
         height, 
         player, 
+        thrust_particles = [];
         opponents = [];
 
     socket.on('game_init', (data) => {
+        thrust_particles = [];
         let d = data.game_vars;
         width = canvas.width = d.width;
         height = canvas.height = d.height;
         init();
     });
+
+    class Particle {
+        // All particles are arcs
+        // originX, originY - where the particle is emitted
+        // iVelObj, iAccObj ({x, y}) - the initial values of velocity and acceleration
+        // isPersistent, lifetimeMS - is the particle lifetime infinite or is it finite with a given lifetime in milliseconds. 
+        // lifetimeFunc, lifetimeFuncDelayMS - is there a function that runs and modifys the particles features throughout its lifetime and if so, how often does it run.
+        constructor(id, originX, originY, colorRGB, radius, iVelObj, iAccObj, fade, fadeDelay) {
+            this.created = performance.now();
+            this.recent = this.created;
+            this.color = colorRGB;
+            this.radius = radius;
+            this.fade = fade;
+            this.fade_delay = fadeDelay;
+            this.color_alpha = 1;
+            this.pos = {
+                x: originX,
+                y: originY
+            };
+            this.vel = {
+                x: iVelObj.x,
+                y: iVelObj.y
+            };
+            this.acc = {
+                x: iAccObj.x,
+                y: iAccObj.y
+            };
+        }
+        draw() {
+            console.log('draw')
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2*Math.PI);
+            ctx.fill();
+        }
+        checkBounds() {
+            //! DANGER
+            
+        }
+        update() {
+            //// apply acceleration to velocity
+            // this.vel.x += this.acc.x;
+            // this.vel.y += this.acc.y;
+
+            // // apply drag to velocity - slows player after no input
+            // this.vel.x *= this.drag;
+            // this.vel.y *= this.drag;
+
+            // // update position
+            this.pos.x += this.vel.x;
+            this.pos.y += this.vel.y;
+
+            // // reset acceleration
+            // this.acc.x = 0;
+            // this.acc.y = 0;
+            this.draw();
+            this.checkBounds();
+        }
+    }
 
     class Opponent {
         constructor() {
@@ -31,6 +92,8 @@ window.onload = () => {
 
     class Player {
         constructor(iX, iY, body_color) {
+            this.created = performance.now();
+            this.recent = this.created;
             // equilateral triangle
             this.radius = 25;
             this.angle = 0;
@@ -116,6 +179,21 @@ window.onload = () => {
             ctx.lineTo(this.points.p1.x, this.points.p1.y);
             ctx.stroke();
         }
+        draw_thrust() {
+            // if((performance.now() - this.recent) > this.thrust_delay) {
+            //     let dist_mag = 1;
+            //     let distX = this.points.p3.x - this.points.p2.x,
+            //         distY = this.points.p3.y - this.points.p2.y,
+            //         iX = (distX * dist_mag) + this.points.p2.x,
+            //         iY = (distY * dist_mag) + this.points.p2.y;
+            //     let randAngle = rand(-15, 15);
+            //     let r0 = ((this.angle + randAngle) * Math.PI) / 180;
+            //     let vX = -(Math.cos(r0) * this.thrust_speed),
+            //         vY = -(Math.sin(r0) * this.thrust_speed);
+            //     thrust_particles.push(new Particle(performance.now(), iX, iY, {r: 255, g: 255, b: 255}, 2, {x:vX, y:vY}, {x:0, y:0}, true, 500));
+            //     this.recent = performance.now();
+            // }
+        }
         update() {
             let r0 = (this.angle * Math.PI) / 180;
             // accelerate if there is movement input
@@ -123,11 +201,13 @@ window.onload = () => {
                 // move forward
                 this.acc.x = Math.cos(r0) * this.acc_speed;
                 this.acc.y = Math.sin(r0) * this.acc_speed;
+                // thrust particles
+                this.draw_thrust();
 
             } else if(this.reverse && !this.forward) {
                 // move in reverse
-                this.acc.x = -(Math.cos(r0) * this.acc_speed);
-                this.acc.y = -(Math.sin(r0) * this.acc_speed);
+                this.acc.x = -(Math.cos(r0) * (this.acc_speed/2));
+                this.acc.y = -(Math.sin(r0) * (this.acc_speed/2));
             }
             if(this.left && !this.right) {
                 // rotate left
@@ -214,8 +294,10 @@ window.onload = () => {
         player = new Player(width/2, height/2, "blue");
     }
 
-    function rand(min, max) {
-        return Math.floor(Math.random() * (max-min) + min);
+    function rand(min, max, floor=true) {
+        if(floor) return Math.floor(Math.random() * (max-min) + min);
+        else return Math.random() * (max-min) + min;
+        
     }
 
     function bgFill(color) {
