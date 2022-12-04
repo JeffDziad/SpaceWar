@@ -1,0 +1,2 @@
+1. Add functionallity to make every player in a rooms game size
+    to the player with the smallest possible screen size.
