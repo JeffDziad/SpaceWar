@@ -6,27 +6,130 @@ window.onload = () => {
         ctx = canvas.getContext('2d');
 
     // HTML Constants
-    const game_centered = document.getElementById('game-centered'),
-        join_form = document.getElementById('join-form'),
-        join_btn = document.getElementById('join-btn');
-        join_btn.addEventListener('click', joinGame);
+    const leaderboard = document.getElementById('leaderboard'),
+        join_modal = document.getElementById('join-modal'),
+        join_btn = document.getElementById('join-btn'),
+        join_modal_close = document.getElementsByClassName('modal-close')[0],
+        player_name = document.getElementById('player-name'),
+        player_color = document.getElementById('player-color'),
+        waiting_submit = document.getElementById('waiting-submit'),
+        submit_player = document.getElementById('submit-join'),
+        join_error = document.getElementById('join-error');
+
+    // Join Modal Events
+    join_btn.addEventListener('click', function() {
+        join_modal.style.display = 'block'; 
+        join_btn.disabled = true;
+    });
+    join_modal_close.addEventListener('click', function() {
+        join_modal.style.display = 'none'; 
+        join_btn.disabled = false;
+    });
+    submit_player.addEventListener('click', function(){
+        submit_player.style.display = 'none';
+        waiting_submit.style.display = 'inline-block';
+        socket.emit('submit-join', {name: player_name.value, color: player_color.value});
+    });
         
     let width, 
         height, 
         player, 
+        current_room = 'None',
+        join_success = false,
         opponents = [];
 
     socket.on('game_init', (data) => {
-        thrust_particles = [];
         let d = data.game_vars;
+        current_room = data.room;
         width = canvas.width = d.width;
         height = canvas.height = d.height;
         init();
     });
 
-    class Opponent {
-        constructor() {
+    socket.on('submit-result', (result) => {
+        if(result) joinGame();
+        else {
+            // Failed join
+            player_name.value = "";
+            player_color.value = "red";
+            join_error.style.display = "inline-block";
+            waiting_submit.style.display = 'none';
+            submit_player.style.display = 'inline-block';
+        }
+    });
+
+    socket.on('register-opponent', (data) => {
+        opponents.push(new Opponent(data.socketID, data.opp));
+    });
+
+    socket.on('opponent-update', (data) => {
+        console.log('updated opponent');
+        for(let i = 0; i < opponents.length; i++) {
             
+            if(opponents[i].socketID == data.socketID) {
+                
+                opponents[i].od = data.opp;
+            }
+        }
+    });
+
+    class Opponent {
+        constructor(socketID, oppData) {
+            this.socketID = socketID;
+            // {
+            //     isOpponent: false,
+            //     created: 10887,   
+            //     recent: 10887,    
+            //     radius: 25,       
+            //     angle: 0,
+            //     colors: { body: 'red', front_indicator: 'white' },
+            //     pos: { x: 500, y: 325 },
+            //     points: { p1: 0, p2: 0, p3: 0 },
+            //     dirs: { foward: false, reverse: false, left: false, right: false },
+            //     vel: { x: 0, y: 0 },
+            //     acc: { x: 0, y: 0 },
+            //     rotate_speed: 3,
+            //     acc_speed: 0.1,
+            //     drag: 0.99,
+            //     wall_force: 1
+            //   }
+            this.od = oppData;
+        }
+        draw() {
+            // calculate point positions
+            let r1 = (this.od.angle * Math.PI) / 180;
+            this.od.points.p1 = {
+                x: this.od.pos.x + Math.cos(r1) * this.od.radius,
+                y: this.od.pos.y + Math.sin(r1) * this.od.radius
+            };
+            let r2 = ((this.od.angle + 120) * Math.PI) / 180;
+            this.od.points.p2 = {
+                x: this.od.pos.x + Math.cos(r2) * this.od.radius,
+                y: this.od.pos.y + Math.sin(r2) * this.od.radius
+            };
+            let r3 = ((this.od.angle + 240) * Math.PI) / 180;
+            this.od.points.p3 = {
+                x: this.od.pos.x + Math.cos(r3) * this.od.radius,
+                y: this.od.pos.y + Math.sin(r3) * this.od.radius
+            };
+            // draw point positions - body triangle
+            ctx.fillStyle = this.od.colors.body;
+            ctx.beginPath();
+            ctx.moveTo(this.od.points.p1.x, this.od.points.p1.y);
+            ctx.lineTo(this.od.points.p2.x, this.od.points.p2.y);
+            ctx.lineTo(this.od.points.p3.x, this.od.points.p3.y);
+            ctx.lineTo(this.od.points.p1.x, this.od.points.p1.y);
+            ctx.fill();
+            // draw front indicator - line from center to head
+            ctx.strokeWeight = 2;
+            ctx.strokeStyle = this.od.colors.front_indicator;
+            ctx.beginPath();
+            ctx.moveTo(this.od.pos.x, this.od.pos.y);
+            ctx.lineTo(this.od.points.p1.x, this.od.points.p1.y);
+            ctx.stroke();
+        }
+        update() {
+            this.draw();
         }
     }
 
@@ -142,8 +245,6 @@ window.onload = () => {
                 // move forward
                 this.acc.x = Math.cos(r0) * this.acc_speed;
                 this.acc.y = Math.sin(r0) * this.acc_speed;
-                // thrust particles
-                this.draw_thrust();
 
             } else if(this.reverse && !this.forward) {
                 // move in reverse
@@ -213,23 +314,16 @@ window.onload = () => {
     }
 
     function init() {
-        // 1. Make canvas visible, hide loading spinner
-        //game_loading.style.display = 'none';
-        game_centered.style.display = 'inline-block';
+        leaderboard.style.width = `${width}px`;
         animate();
     }
 
     function joinGame() {
-        // 1. Prompt for player name, choose color
-        join_btn.style.display = "none";
-        join_form.style.display = "inline-block";
-        // -- once submitted check if name is already in use, if so ask for new name
-        // -- upon successful submit, hide join button and display leaderboard
-        // 2. add player
-
-
-        // default test player
-        player = new Player(width/2, height/2, "blue");
+        join_modal.style.display = 'none';
+        join_btn.style.disabled = true;
+        player = new Player(width/2, height/2, player_color.value);
+        socket.emit('register-player', player);
+        join_success = true;
     }
 
     function rand(min, max, floor=true) {
@@ -254,10 +348,22 @@ window.onload = () => {
         ctx.stroke();
     }
 
+    function sendPlayerUpdate() {
+        // Send player information to all other player
+        socket.emit('player-update', player);
+    }
+
+    function updateOpponents() {
+        for(let i = 0; i < opponents.length; i++) {
+            opponents[i].update();
+        }
+    }
+
     function animate() {
         bgFill('black');
         if(player) player.update();
+        if(join_success) sendPlayerUpdate();
+        updateOpponents();
         requestAnimationFrame(animate);
     }
-
 }

@@ -12,22 +12,51 @@
     </head>
     <body>
         <div id="wrapper">
-            <div id="game-container">
-                <h1 id="title">Space War</h1>
-                <div id="game-centered">
+            <h1 id="title">Space War</h1>
+            <div id="loaded-content">
+                <div id="game-container">
                     <canvas id="space-war"></canvas>
+                </div>
+                <div id="leaderboard">
+                    <div id="leaderboard-header">
+                        <p style="display: inline;">Leaderboard</p>
+                        <button id="join-btn">Join</button>
+                    </div>
+                    <hr>
+                    <!-- Dynamically Generated List goes here -->
+                </div>
+            </div>
+        </div>
+        <div id="join-modal" class="modal"> 
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="modal-close">&times;</span>
+                    <h2>Join Game</h2>
+                </div>
+                <div class="modal-body">
+                    Choose your name and ship color:
+                    <p id="join-error" style="color: red;">Another player is using that name or color!</p>
+                    <hr>
                     <br>
-                    <div id="leaderboard-container">
-                        Leaderboard
-                    </div>
+                    <label for="player-name">Player Name:</label>
+                    <input type="text" id="player-name"><br>
+                    <br>
+                    <label for="player-color">Choose a color:</label>
+                    <select name="player-color" id="player-color">
+                        <option value="red">Red</option>
+                        <option value="orange">Orange</option>
+                        <option value="yellow">Yellow</option>
+                        <option value="green">Green</option>
+                        <option value="blue">Blue</option>
+                        <option value="indigo">Indigo</option>
+                        <option value="violet">Violet</option>
+                    </select>
+                    <br><br>
                 </div>
-                <div id="join-container">
-                    <button id="join-btn">Join</button>
-                    <div id="join-form">
-                        <h3>New Player</h3>
-                    </div>
+                <div class="modal-footer">
+                    <h3 id="waiting-submit">Waiting<span class="blink-1">.</span><span class="blink-2">.</span><span class="blink-3">.</span></h3>
+                    <h3 id="submit-join">Continue</h3>
                 </div>
-                
             </div>
         </div>
     </body>

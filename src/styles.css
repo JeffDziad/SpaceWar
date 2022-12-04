@@ -1,3 +1,7 @@
+* {
+    font-family: 'Orbitron', sans-serif;
+}
+
 body {
     background: #000000;
     background: -moz-radial-gradient(center, #000000 0%, #060071 100%, #000000 100%);
@@ -25,48 +29,154 @@ body {
     font-size: 75px;
 }
 
+#game-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
+}
+
+#leaderboard {
+    color: white;
+    margin: auto;
+}
+
+#leaderboard-header {
+    font-size: 25px;
+    margin: 10px 10px;
+}
+
+#join-btn {
+    cursor: grab;
+    display: block;
+    margin: 0 auto;
+    font-size: 20px;
+    float: right;
+    padding: 0 5px;
+}
+
+#join-btn:active {
+    cursor: grabbing;
+}
+
+#submit-join {
+    display: inline-block;
+}
+
+#submit-join:hover {
+    color: grey;
+    cursor: pointer;
+}
+
+#waiting-submit {
+    display: none;
+}
+
+#join-error {
+    display: none;
+}
+
+.blink-1 {
+    animation: blinking 2s ease-in-out infinite;
+}
+
+.blink-2 {
+    animation: blinking 2s ease-in-out infinite;
+    animation-delay: 0.3s;
+}
+
+.blink-3 {
+    animation: blinking 2s ease-in-out infinite;
+    animation-delay: 0.6s;
+}
+
+@keyframes blinking {
+    0% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
 #space-war {
     border: white solid 5px;
     border-radius: 25px;
     margin: auto;
 }
 
-#join-container {
-    display: inline-block;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-#join-form {
-    width: 300px;
-    height: 200px;
-    background: white;
-    display: none;
-}
-
-#leaderboard-container {
-    color: white;
-    display: none;
-}
-
-#join-btn {
-    border: white solid 5px;
-    border-radius: 25px;
-    color: white;
-    background-color: black;
-    font-size: 25px;
-}
-
 #wrapper {
     width: 100%;
     height: 100%;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-content: center;
 }
 
-#game-centered {
+.modal {
     display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rbg(0, 0, 0);
+    background-color: rbga(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 0px;
+    border: 1px solid #888;
+    width: 500px;
+    -webkit-animation-name: animatetop;
+    -webkit-animation-duration: 0.4s;
+    animation-name: animatetop;
+    animation-duration: 0.4s
+}
+
+.modal-header {
+    padding: 2px 16px;
+    background-color: #06006D;
+    color: white;
+}
+
+.modal-body {
+    padding: 2px 16px;
+}
+
+.modal-footer {
+    padding: 2px 16px;
+    background-color: #06006D;
+    color: white;
+}
+
+.modal-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.modal-close:hover, .modal-close:focus {
+    color: red;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+@-webkit-keyframes animatetop {
+    from {top:-300px; opacity:0} 
+    to {top:0; opacity:1}
+}
+
+@keyframes animatetop {
+    from {top:-300px; opacity:0}
+    to {top:0; opacity:1}
 }
