@@ -2,6 +2,13 @@
     font-family: 'Orbitron', sans-serif;
 }
 
+#connection-status {
+    position: absolute;
+    top: 10px;
+    left: 10x;
+    color: red;
+}
+
 body {
     background: #000000;
     background: -moz-radial-gradient(center, #000000 0%, #060071 100%, #000000 100%);

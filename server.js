@@ -27,6 +27,7 @@ class GameRoom {
         this.client_count--;
         this.clients.splice(index, 1);
         socket.leave(this.getRoomName());
+        //socket.broadcast.to(socket.data.roomName).emit('opponent-leave', socket);
         console.log(socket.id + " left gameroom " + this.getRoomName() + ".");
     }
     validateAndJoin(socket, name, color) {
@@ -89,9 +90,16 @@ app.use(express.static(src));
 io.on('connection', (socket) => {
     assignRoom(socket);
 
+    let opponents = io.in(socket.data.roomName).fetchSockets();
+    for(let i = 0; i < opponents.length; i++) {
+        let o = opponents[i];
+        console.log(o);
+        o.emit('first_contact', o);
+    }
+
     socket.emit('game_init', {
         game_vars: game_vars,
-        room: socket.data.roomName
+        room: socket.data.roomName,
     });
 
     socket.on('submit-join', (args) => {

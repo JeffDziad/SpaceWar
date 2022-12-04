@@ -14,6 +14,7 @@ window.onload = () => {
         player_color = document.getElementById('player-color'),
         waiting_submit = document.getElementById('waiting-submit'),
         submit_player = document.getElementById('submit-join'),
+        connection_status = document.getElementById('connection-status'),
         join_error = document.getElementById('join-error');
 
     // Join Modal Events
@@ -36,11 +37,15 @@ window.onload = () => {
         player, 
         current_room = 'None',
         join_success = false,
+        opponent_timeout = 2000;
         opponents = [];
 
     socket.on('game_init', (data) => {
         let d = data.game_vars;
+        //opponents = 
         current_room = data.room;
+        connection_status.style.color = 'green';
+        connection_status.innerHTML = current_room;
         width = canvas.width = d.width;
         height = canvas.height = d.height;
         init();
@@ -58,23 +63,38 @@ window.onload = () => {
         }
     });
 
+    socket.on('first-broadcast', () => {
+        registerPlayer();
+    });
+
     socket.on('register-opponent', (data) => {
-        opponents.push(new Opponent(data.socketID, data.opp));
+        let found = false
+        for(let i = 0; i < opponents.length; i++) {
+            if(opponents[i].stocketID == data.socketID) found = true;
+        }
+        if(!found) {
+            opponents.push(new Opponent(data.socketID, data.opp));
+        }
     });
 
     socket.on('opponent-update', (data) => {
-        console.log('updated opponent');
+        let found = false;
         for(let i = 0; i < opponents.length; i++) {
             
             if(opponents[i].socketID == data.socketID) {
-                
+                opponents[i].lastUpdate = performance.now();
                 opponents[i].od = data.opp;
+                found = true;
             }
+        }
+        if(!found) {
+            opponents.push(new Opponent(data.socketID, data.opp));
         }
     });
 
     class Opponent {
         constructor(socketID, oppData) {
+            this.lastUpdate = performance.now();
             this.socketID = socketID;
             // {
             //     isOpponent: false,
@@ -140,7 +160,7 @@ window.onload = () => {
             // equilateral triangle
             this.radius = 25;
             this.angle = 0;
-
+            this.score = 0;
             // general variables
             this.colors = {
                 body: body_color,
@@ -322,8 +342,12 @@ window.onload = () => {
         join_modal.style.display = 'none';
         join_btn.style.disabled = true;
         player = new Player(width/2, height/2, player_color.value);
-        socket.emit('register-player', player);
+        registerPlayer();
         join_success = true;
+    }
+
+    function registerPlayer() {
+        socket.emit('register-player', player);
     }
 
     function rand(min, max, floor=true) {
@@ -355,6 +379,10 @@ window.onload = () => {
 
     function updateOpponents() {
         for(let i = 0; i < opponents.length; i++) {
+            if(performance.now() - opponents[i].lastUpdate > opponent_timeout) {
+                opponents.splice(i, 1);
+                break;
+            }
             opponents[i].update();
         }
     }
