@@ -16,7 +16,8 @@ window.onload = () => {
         waiting_submit = document.getElementById('waiting-submit'),
         submit_player = document.getElementById('submit-join'),
         connection_status = document.getElementById('connection-status'),
-        join_error = document.getElementById('join-error');
+        join_error = document.getElementById('join-error'),
+        score_div = document.getElementById('score-div');
 
     // Join Modal Events
     join_btn.addEventListener('click', function() {
@@ -98,16 +99,25 @@ window.onload = () => {
         }
     });
 
+    // Global Listeners
+    addEventListener('resize', () => {
+        positionScoreDiv();
+    });
+
     class Projectile {
-        constructor(owner, color, startX, startY, fireAngle) {
+        constructor(owner, color, startX, startY, iVelX, iVelY, fireAngle) {
             // owner = socketID
             this.owner = owner;
             this.pos = {
                 x: startX,
                 y: startY
             };
+            this.vel = {
+                x: iVelX,
+                y: iVelY
+            }
             this.angle = fireAngle;
-            this.speed = 5;
+            this.speed = 6;
             this.color = color;
             this.radius = 4;
         }
@@ -118,10 +128,10 @@ window.onload = () => {
             ctx.fill();
         }
         update() {
-            // Change 
             let r0 = (this.angle * Math.PI) / 180;
-            this.pos.x = Math.cos(r0) * this.speed;
-            this.pos.y = Math.sin(r0) * this.speed;
+            this.pos.x += (Math.cos(r0) * this.speed) + this.vel.x;
+            this.pos.y += (Math.sin(r0) * this.speed) + this.vel.y;
+            this.draw();
         }
     }
 
@@ -130,6 +140,9 @@ window.onload = () => {
             this.lastUpdate = performance.now();
             this.socketID = socketID;
             this.od = oppData;
+
+            this.projectiles = [];
+            this.last_projectile_count = this.projectiles.length;
 
             // Initialize leaderboard placement
             leaderboard.addEntry(this.socketID, this.od.player_name, this.od.colors.body, this.od.score);
@@ -170,13 +183,21 @@ window.onload = () => {
             //Update Leaderboard Score
             leaderboard.updateEntry(this.socketID, this.od.score);
         }
+        drawProjectiles() {
+            for(let i = 0; i < this.od.projectiles.length; i++) {
+                let p = new Projectile(this.socketID, this.od.colors.body, this.od.points.p1.x, this.od.points.p1.y, this.od.vel.x, this.od.vel.y, this.od.angle);
+                p.update();
+            }
+        }
         update() {
+            this.drawProjectiles();
             this.draw();
         }
     }
 
     class Player {
-        constructor(playerName, iX, iY, body_color) {
+        constructor(socketID, playerName, iX, iY, body_color) {
+            this.socketID = socketID;
             this.player_name = playerName;
             this.created = performance.now();
             this.recent = this.created;
@@ -198,11 +219,12 @@ window.onload = () => {
                 p2: 0,
                 p3: 0
             };
-            this.dirs = {
+            this.controls = {
                 foward: false,
                 reverse: false,
                 left: false,
-                right: false
+                right: false,
+                shoot: false,
             };
             this.vel = {
                 x: 0,
@@ -212,27 +234,34 @@ window.onload = () => {
                 x: 0,
                 y: 0 
             };
+            this.shot_recoil = 2;
             this.rotate_speed = 3;
             this.acc_speed = 0.1;
             this.drag = 0.99;
             this.wall_force = 1;
             this.initEvents();
 
+            // weapons 
+            this.projectiles = [];
+
             // Initialize leaderboard placement
             leaderboard.addEntry(this.socketID, this.player_name, this.colors.body, this.score);
         }
         initEvents() {
             addEventListener('keydown', (e) => {
-                if(e.key == "w") this.forward = true;
-                if(e.key == "s") this.reverse = true;
-                if(e.key == "a") this.left = true;
-                if(e.key == "d") this.right = true;
+                if(e.key == "w") this.controls.forward = true;
+                if(e.key == "s") this.controls.reverse = true;
+                if(e.key == "a") this.controls.left = true;
+                if(e.key == "d") this.controls.right = true;
+            });
+            addEventListener('keypress', (e) => {
+                if(e.code == "Space") this.controls.shoot = true;
             });
             addEventListener('keyup', (e) => {
-                if(e.key == "w") this.forward = false;
-                if(e.key == "s") this.reverse = false;
-                if(e.key == "a") this.left = false;
-                if(e.key == "d") this.right = false;
+                if(e.key == "w") this.controls.forward = false;
+                if(e.key == "s") this.controls.reverse = false;
+                if(e.key == "a") this.controls.left = false;
+                if(e.key == "d") this.controls.right = false;
             });
         }
         draw() {
@@ -270,41 +299,33 @@ window.onload = () => {
         
             //Update Leaderboard Score
             leaderboard.updateEntry(this.socketID, this.score);
+            //Update score in score-div
+            this.drawScore();
         }
-        draw_thrust() {
-            //? Implement thrust particles later, should be encapsulated in player class. 
-            // if((performance.now() - this.recent) > this.thrust_delay) {
-            //     let dist_mag = 1;
-            //     let distX = this.points.p3.x - this.points.p2.x,
-            //         distY = this.points.p3.y - this.points.p2.y,
-            //         iX = (distX * dist_mag) + this.points.p2.x,
-            //         iY = (distY * dist_mag) + this.points.p2.y;
-            //     let randAngle = rand(-15, 15);
-            //     let r0 = ((this.angle + randAngle) * Math.PI) / 180;
-            //     let vX = -(Math.cos(r0) * this.thrust_speed),
-            //         vY = -(Math.sin(r0) * this.thrust_speed);
-            //     thrust_particles.push(new Particle(performance.now(), iX, iY, {r: 255, g: 255, b: 255}, 2, {x:vX, y:vY}, {x:0, y:0}, true, 500));
-            //     this.recent = performance.now();
-            // }
+        shoot() {
+            this.projectiles.push(new Projectile(this.socketID, this.colors.body, this.points.p1.x, this.points.p1.y, this.vel.x, this.vel.y, this.angle));
+            let r0 = (this.angle * Math.PI) / 180;
+            this.vel.x += -(Math.cos(r0) * (this.shot_recoil));
+            this.vel.y += -(Math.sin(r0) * (this.shot_recoil));
         }
         update() {
             let r0 = (this.angle * Math.PI) / 180;
             // accelerate if there is movement input
-            if(this.forward && !this.reverse) {
+            if(this.controls.forward && !this.controls.reverse) {
                 // move forward
                 this.acc.x = Math.cos(r0) * this.acc_speed;
                 this.acc.y = Math.sin(r0) * this.acc_speed;
 
-            } else if(this.reverse && !this.forward) {
+            } else if(this.controls.reverse && !this.controls.forward) {
                 // move in reverse
                 this.acc.x = -(Math.cos(r0) * (this.acc_speed/2));
                 this.acc.y = -(Math.sin(r0) * (this.acc_speed/2));
             }
-            if(this.left && !this.right) {
+            if(this.controls.left && !this.controls.right) {
                 // rotate left
                 this.angle -= this.rotate_speed;
 
-            } else if(this.right && !this.left) {
+            } else if(this.controls.right && !this.controls.left) {
                 // rorate right
                 this.angle += this.rotate_speed;
             }
@@ -326,18 +347,33 @@ window.onload = () => {
             this.acc.y = 0;
 
             this.wallCollisions();
+            this.checkControls();
+            this.updateProjectiles();
             this.draw();
+        }
+        updateProjectiles() {
+            if(this.controls.shoot) {
+                this.shoot();
+                this.controls.shoot = false;
+            }
+            for(let i = 0; i < this.projectiles.length; i++) {
+                this.projectiles[i].update();
+            }
+        }
+        checkControls() {
+            if(this.controls.shoot) {
+                this.controls.shoot = false;
+                this.shoot();
+            }
+        }
+        drawScore() {
+            score_div.innerHTML = `${this.score}`;
         }
         applyForce(x=0, y=0) {
             this.acc.x += x;
             this.acc.y += y;
         }
         wallCollisions() {
-            // handle wall collisions
-            // if there is a wall collision:
-            // 1. get angle of player relative to the wall they're approaching 
-            // 2. remove all velocity
-            // 3. apply negative velocity to bounch player off wall
             for(const prop in this.points) {
                 let p = this.points[prop]; // { x, y }
                 if(p.x > width) {
@@ -363,6 +399,7 @@ window.onload = () => {
     }
 
     function init() {
+        positionScoreDiv();
         leaderboard_div.style.width = `${width}px`;
         animate();
     }
@@ -370,7 +407,7 @@ window.onload = () => {
     function joinGame() {
         join_modal.style.display = 'none';
         join_btn.style.disabled = true;
-        player = new Player(player_name.value, width/2, height/2, player_color.value);
+        player = new Player(socket.id, player_name.value, width/2, height/2, player_color.value);
         registerPlayer();
         join_success = true;
     }
@@ -418,6 +455,12 @@ window.onload = () => {
 
     function updateLeaderboard() {
         leaderboard_entries_div.innerHTML = leaderboard.getFormattedEntriesHTML();
+    }
+
+    function positionScoreDiv() {
+        let boundBox = canvas.getBoundingClientRect();
+        score_div.style.top = `${boundBox.top+15}px`;
+        score_div.style.left = `${boundBox.left+20}px`;
     }
 
     function animate() {

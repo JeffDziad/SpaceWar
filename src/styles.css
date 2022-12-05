@@ -43,6 +43,12 @@ body {
     align-content: center;
 }
 
+#score-div {
+    position: absolute;
+    color: white;
+    z-index: 3;
+}
+
 #leaderboard {
     color: white;
     margin: auto;

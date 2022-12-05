@@ -1,2 +1,33 @@
 1. Add functionallity to make every player in a rooms game size
     to the player with the smallest possible screen size.
+
+*************************************************************************************
+
+BACKUP CODE
+
+*************************************************************************************
+
+
+draw_thrust() {
+            //? Implement thrust particles later, should be encapsulated in player class. 
+            // if((performance.now() - this.recent) > this.thrust_delay) {
+            //     let dist_mag = 1;
+            //     let distX = this.points.p3.x - this.points.p2.x,
+            //         distY = this.points.p3.y - this.points.p2.y,
+            //         iX = (distX * dist_mag) + this.points.p2.x,
+            //         iY = (distY * dist_mag) + this.points.p2.y;
+            //     let randAngle = rand(-15, 15);
+            //     let r0 = ((this.angle + randAngle) * Math.PI) / 180;
+            //     let vX = -(Math.cos(r0) * this.thrust_speed),
+            //         vY = -(Math.sin(r0) * this.thrust_speed);
+            //     thrust_particles.push(new Particle(performance.now(), iX, iY, {r: 255, g: 255, b: 255}, 2, {x:vX, y:vY}, {x:0, y:0}, true, 500));
+            //     this.recent = performance.now();
+            // }
+        }
+
+
+*************************************************************************************
+
+BACKUP CODE END
+
+*************************************************************************************

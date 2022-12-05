@@ -7,12 +7,13 @@ class LeaderboardEntry {
     getHTML() {
         return `
             <div class="leaderboard-entry" style="background-color: ${this.playerColor}">
-                <span>${this.playerName}</span><span style="float: right; font-size: 20px;">${this.score}</span>
+                <span>${this.playerName}</span><span style="float: right;">${this.score}</span>
             </div>
         `;
     }
     update(newScore) {
-        this.score = newScore;
+        if(this.score !== newScore) this.score = newScore;
+        
     }
 }
 
