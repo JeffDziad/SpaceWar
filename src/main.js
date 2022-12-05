@@ -6,7 +6,8 @@ window.onload = () => {
         ctx = canvas.getContext('2d');
 
     // HTML Constants
-    const leaderboard = document.getElementById('leaderboard'),
+    const leaderboard_div = document.getElementById('leaderboard'),
+        leaderboard_entries_div = document.getElementById('leaderboard-entries'),
         join_modal = document.getElementById('join-modal'),
         join_btn = document.getElementById('join-btn'),
         join_modal_close = document.getElementsByClassName('modal-close')[0],
@@ -37,12 +38,12 @@ window.onload = () => {
         player, 
         current_room = 'None',
         join_success = false,
-        opponent_timeout = 2000;
-        opponents = [];
+        opponent_timeout = 60000; // timeout after a minute of no new input
+        opponents = [],
+        leaderboard = new Leaderboard();
 
     socket.on('game_init', (data) => {
         let d = data.game_vars;
-        //opponents = 
         current_room = data.room;
         connection_status.style.color = 'green';
         connection_status.innerHTML = current_room;
@@ -63,10 +64,6 @@ window.onload = () => {
         }
     });
 
-    socket.on('first-broadcast', () => {
-        registerPlayer();
-    });
-
     socket.on('register-opponent', (data) => {
         let found = false
         for(let i = 0; i < opponents.length; i++) {
@@ -74,6 +71,15 @@ window.onload = () => {
         }
         if(!found) {
             opponents.push(new Opponent(data.socketID, data.opp));
+        }
+    });
+
+    socket.on('opponent-disconnect', (id) => {
+        leaderboard.removeEntry(id);
+        for(let i = 0; i < opponents.length; i++) {
+            console.log(opponents[i].socketID + " leaving.");
+            if(opponents[i].socketID == id) opponents.splice(i, 1);
+            break;            
         }
     });
 
@@ -92,28 +98,41 @@ window.onload = () => {
         }
     });
 
+    class Projectile {
+        constructor(owner, color, startX, startY, fireAngle) {
+            // owner = socketID
+            this.owner = owner;
+            this.pos = {
+                x: startX,
+                y: startY
+            };
+            this.angle = fireAngle;
+            this.speed = 5;
+            this.color = color;
+            this.radius = 4;
+        }
+        draw() {
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI, false);
+            ctx.fill();
+        }
+        update() {
+            // Change 
+            let r0 = (this.angle * Math.PI) / 180;
+            this.pos.x = Math.cos(r0) * this.speed;
+            this.pos.y = Math.sin(r0) * this.speed;
+        }
+    }
+
     class Opponent {
         constructor(socketID, oppData) {
             this.lastUpdate = performance.now();
             this.socketID = socketID;
-            // {
-            //     isOpponent: false,
-            //     created: 10887,   
-            //     recent: 10887,    
-            //     radius: 25,       
-            //     angle: 0,
-            //     colors: { body: 'red', front_indicator: 'white' },
-            //     pos: { x: 500, y: 325 },
-            //     points: { p1: 0, p2: 0, p3: 0 },
-            //     dirs: { foward: false, reverse: false, left: false, right: false },
-            //     vel: { x: 0, y: 0 },
-            //     acc: { x: 0, y: 0 },
-            //     rotate_speed: 3,
-            //     acc_speed: 0.1,
-            //     drag: 0.99,
-            //     wall_force: 1
-            //   }
             this.od = oppData;
+
+            // Initialize leaderboard placement
+            leaderboard.addEntry(this.socketID, this.od.player_name, this.od.colors.body, this.od.score);
         }
         draw() {
             // calculate point positions
@@ -147,6 +166,9 @@ window.onload = () => {
             ctx.moveTo(this.od.pos.x, this.od.pos.y);
             ctx.lineTo(this.od.points.p1.x, this.od.points.p1.y);
             ctx.stroke();
+
+            //Update Leaderboard Score
+            leaderboard.updateEntry(this.socketID, this.od.score);
         }
         update() {
             this.draw();
@@ -154,7 +176,8 @@ window.onload = () => {
     }
 
     class Player {
-        constructor(iX, iY, body_color) {
+        constructor(playerName, iX, iY, body_color) {
+            this.player_name = playerName;
             this.created = performance.now();
             this.recent = this.created;
             // equilateral triangle
@@ -194,6 +217,9 @@ window.onload = () => {
             this.drag = 0.99;
             this.wall_force = 1;
             this.initEvents();
+
+            // Initialize leaderboard placement
+            leaderboard.addEntry(this.socketID, this.player_name, this.colors.body, this.score);
         }
         initEvents() {
             addEventListener('keydown', (e) => {
@@ -241,6 +267,9 @@ window.onload = () => {
             ctx.moveTo(this.pos.x, this.pos.y);
             ctx.lineTo(this.points.p1.x, this.points.p1.y);
             ctx.stroke();
+        
+            //Update Leaderboard Score
+            leaderboard.updateEntry(this.socketID, this.score);
         }
         draw_thrust() {
             //? Implement thrust particles later, should be encapsulated in player class. 
@@ -334,14 +363,14 @@ window.onload = () => {
     }
 
     function init() {
-        leaderboard.style.width = `${width}px`;
+        leaderboard_div.style.width = `${width}px`;
         animate();
     }
 
     function joinGame() {
         join_modal.style.display = 'none';
         join_btn.style.disabled = true;
-        player = new Player(width/2, height/2, player_color.value);
+        player = new Player(player_name.value, width/2, height/2, player_color.value);
         registerPlayer();
         join_success = true;
     }
@@ -387,11 +416,16 @@ window.onload = () => {
         }
     }
 
+    function updateLeaderboard() {
+        leaderboard_entries_div.innerHTML = leaderboard.getFormattedEntriesHTML();
+    }
+
     function animate() {
         bgFill('black');
         if(player) player.update();
         if(join_success) sendPlayerUpdate();
         updateOpponents();
+        updateLeaderboard();
         requestAnimationFrame(animate);
     }
 }

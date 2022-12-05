@@ -53,6 +53,12 @@ body {
     margin: 10px 10px;
 }
 
+.leaderboard-entry {
+    border-radius: 20px;
+    padding: 10px;
+    border: white 2px solid;
+}
+
 #join-btn {
     cursor: grab;
     display: block;

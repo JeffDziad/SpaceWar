@@ -117,6 +117,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
+        socket.broadcast.to(socket.data.roomName).emit('opponent-disconnect', socket.id);
         unassignRoom(socket);
     });
 });
