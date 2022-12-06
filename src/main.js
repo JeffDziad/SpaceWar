@@ -185,17 +185,17 @@ window.onload = () => {
             leaderboard.updateEntry(this.socketID, this.od.score);
         }
         drawProjectiles() {
-            // for(let i = 0; i < this.od.projectiles.length; i++) {
-                
-            //     let p = new Projectile(this.socketID, this.od.colors.body,
-            //         this.od.points.p1.x+5, this.od.points.p1.y+5, this.od.vel.x, this.od.vel.y, this.od.angle);
-            //     console.log(p);
-            //     p.draw();
-            //     // ctx.fillColor = "red";
-            //     // ctx.beginPath();
-            //     // ctx.arc(this.od.projectiles[i].pos.x, this.od.projectiles[i].pos.y, 4, 0, 2 * Math.PI, false);
-            //     // ctx.fill();
-            // }
+            //! Not Effecient - creating new projectile every update
+            for(let i = 0; i < this.od.projectiles.length; i++) {
+                let p = new Projectile(this.socketID, this.od.projectiles[i].color,
+                    this.od.projectiles[i].pos.x, this.od.projectiles[i].pos.y, this.od.vel.x, this.od.vel.y, this.od.angle);
+                p.draw();
+
+                // ctx.fillColor = this.od.projectiles[i].color;
+                // ctx.beginPath();
+                // ctx.arc(this.od.projectiles[i].pos.x, this.od.projectiles[i].pos.y, 4, 0, 2 * Math.PI, false);
+                // ctx.fill();
+            }
         }
         update() {
             this.drawProjectiles();
@@ -354,10 +354,14 @@ window.onload = () => {
             this.acc.x = 0;
             this.acc.y = 0;
 
+            this.opponentCollisions();
             this.wallCollisions();
             this.checkControls();
             this.updateProjectiles();
             this.draw();
+        }
+        opponentCollision() {
+            // Line segment intersection needed
         }
         updateProjectiles() {
             for(let i = 0; i < this.projectiles.length; i++) {
@@ -423,7 +427,6 @@ window.onload = () => {
     function rand(min, max, floor=true) {
         if(floor) return Math.floor(Math.random() * (max-min) + min);
         else return Math.random() * (max-min) + min;
-        
     }
 
     function bgFill(color) {
