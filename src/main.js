@@ -106,6 +106,7 @@ window.onload = () => {
 
     class Projectile {
         constructor(owner, color, startX, startY, iVelX, iVelY, fireAngle) {
+            this.id = performance.now();
             // owner = socketID
             this.owner = owner;
             this.pos = {
@@ -184,10 +185,17 @@ window.onload = () => {
             leaderboard.updateEntry(this.socketID, this.od.score);
         }
         drawProjectiles() {
-            for(let i = 0; i < this.od.projectiles.length; i++) {
-                let p = new Projectile(this.socketID, this.od.colors.body, this.od.points.p1.x, this.od.points.p1.y, this.od.vel.x, this.od.vel.y, this.od.angle);
-                p.update();
-            }
+            // for(let i = 0; i < this.od.projectiles.length; i++) {
+                
+            //     let p = new Projectile(this.socketID, this.od.colors.body,
+            //         this.od.points.p1.x+5, this.od.points.p1.y+5, this.od.vel.x, this.od.vel.y, this.od.angle);
+            //     console.log(p);
+            //     p.draw();
+            //     // ctx.fillColor = "red";
+            //     // ctx.beginPath();
+            //     // ctx.arc(this.od.projectiles[i].pos.x, this.od.projectiles[i].pos.y, 4, 0, 2 * Math.PI, false);
+            //     // ctx.fill();
+            // }
         }
         update() {
             this.drawProjectiles();
@@ -352,10 +360,6 @@ window.onload = () => {
             this.draw();
         }
         updateProjectiles() {
-            if(this.controls.shoot) {
-                this.shoot();
-                this.controls.shoot = false;
-            }
             for(let i = 0; i < this.projectiles.length; i++) {
                 this.projectiles[i].update();
             }

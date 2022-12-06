@@ -93,7 +93,6 @@ io.on('connection', (socket) => {
     let opponents = io.in(socket.data.roomName).fetchSockets();
     for(let i = 0; i < opponents.length; i++) {
         let o = opponents[i];
-        console.log(o);
         o.emit('first_contact', o);
     }
 
