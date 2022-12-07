@@ -136,6 +136,23 @@ window.onload = () => {
         }
     }
 
+    class Ammo {
+        constructor() {
+            this.pos = {
+                x: 10,
+                y: height-30
+            }
+            this.width = 200;
+            this.height = 20;
+            this.shot_limit = 3;
+            this.shot_reload_MS = 1000;
+        }
+        draw() {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+        }
+    }
+
     class Opponent {
         constructor(socketID, oppData) {
             this.lastUpdate = performance.now();
@@ -248,6 +265,7 @@ window.onload = () => {
             this.drag = 0.99;
             this.wall_force = 1;
             this.initEvents();
+            this.ammo = new Ammo();
 
             // weapons 
             this.projectiles = [];
@@ -309,6 +327,12 @@ window.onload = () => {
             leaderboard.updateEntry(this.socketID, this.score);
             //Update score in score-div
             this.drawScore();
+
+            //draw ammo bar
+            this.drawAmmoBar();
+        }
+        drawAmmoBar() {
+            //this.ammo.draw();
         }
         shoot() {
             this.projectiles.push(new Projectile(this.socketID, this.colors.body, this.points.p1.x, this.points.p1.y, this.vel.x, this.vel.y, this.angle));
@@ -360,7 +384,7 @@ window.onload = () => {
             this.updateProjectiles();
             this.draw();
         }
-        opponentCollision() {
+        opponentCollisions() {
             // Line segment intersection needed
         }
         updateProjectiles() {
