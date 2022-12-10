@@ -138,18 +138,61 @@ window.onload = () => {
 
     class Ammo {
         constructor() {
-            this.pos = {
+            //? this.inner.value must be divisable by this.shot_limit
+            this.max_value = 200;
+            this.inner = {
                 x: 10,
-                y: height-30
+                y: height-30,
+                height: 20,
+                value: this.max_value,
+                margin: 2,
             }
-            this.width = 200;
-            this.height = 20;
-            this.shot_limit = 3;
-            this.shot_reload_MS = 1000;
+
+            this.outer = {
+                x: this.inner.x - this.inner.margin,
+                y: this.inner.y - this.inner.margin,
+                width: this.inner.value + (this.inner.margin*2),
+                height: this.inner.height + (this.inner.margin*2),
+            }
+
+            this.shot_limit = 4;
+            this.shot_reload_MS = 50;
+            this.cell_size = this.inner.value/this.shot_limit;
+            this.last_increase = performance.now();
+        }
+        shot() {
+            // called when shot has been made
+            if(this.inner.value >= this.cell_size) {
+                this.inner.value -= this.cell_size;
+            }
+        }
+        canShoot() {
+            return this.inner.value >= this.cell_size;
         }
         draw() {
+            if(this.inner.value < this.max_value) {
+                if(performance.now() - this.last_increase > this.shot_reload_MS) {
+                    this.inner.value++;
+                    this.last_increase = performance.now();
+                }
+            }
+            // Draw ammo box
             ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+            ctx.fillRect(this.outer.x, this.outer.y, this.outer.width, this.outer.height);
+
+            // Draw ammo bar
+            ctx.fillStyle = 'rgba(0, 0, 255, 0.5)';
+            ctx.fillRect(this.inner.x, this.inner.y, this.inner.value, this.inner.height);
+
+            // Draw Ammo Bars
+            ctx.strokeStyle = "white";
+            ctx.strokeWeight = 2;
+            for(let i = 1; i < this.shot_limit; i++) {
+                ctx.beginPath();
+                ctx.moveTo(this.inner.x + (this.cell_size*i), this.outer.y);
+                ctx.lineTo(this.inner.x + (this.cell_size*i), this.outer.y + this.outer.height);
+                ctx.stroke();
+            }
         }
     }
 
@@ -207,11 +250,6 @@ window.onload = () => {
                 let p = new Projectile(this.socketID, this.od.projectiles[i].color,
                     this.od.projectiles[i].pos.x, this.od.projectiles[i].pos.y, this.od.vel.x, this.od.vel.y, this.od.angle);
                 p.draw();
-
-                // ctx.fillColor = this.od.projectiles[i].color;
-                // ctx.beginPath();
-                // ctx.arc(this.od.projectiles[i].pos.x, this.od.projectiles[i].pos.y, 4, 0, 2 * Math.PI, false);
-                // ctx.fill();
             }
         }
         update() {
@@ -219,7 +257,6 @@ window.onload = () => {
             this.draw();
         }
     }
-
     class Player {
         constructor(socketID, playerName, iX, iY, body_color) {
             this.socketID = socketID;
@@ -259,7 +296,7 @@ window.onload = () => {
                 x: 0,
                 y: 0 
             };
-            this.shot_recoil = 2;
+            this.shot_recoil = 1.5;
             this.rotate_speed = 3;
             this.acc_speed = 0.1;
             this.drag = 0.99;
@@ -315,6 +352,20 @@ window.onload = () => {
             ctx.lineTo(this.points.p3.x, this.points.p3.y);
             ctx.lineTo(this.points.p1.x, this.points.p1.y);
             ctx.fill();
+
+            //draw windsheild
+            let t0 = Utilities.midpoint(this.points.p1.x, this.points.p2.x, this.points.p1.y, this.points.p2.y);
+            let t1 = Utilities.midpoint(this.points.p1.x, this.points.p3.x, this.points.p1.y, this.points.p3.y);
+            ctx.fillStyle = 'black';
+            ctx.strokeStyle = 'white';
+            ctx.beginPath();
+            ctx.moveTo(this.points.p1.x, this.points.p1.y);
+            ctx.lineTo(t0.x, t0.y);
+            ctx.lineTo(t1.x, t1.y);
+            ctx.lineTo(this.points.p1.x, this.points.p1.y)
+            ctx.fill();
+            ctx.stroke();
+
             // draw front indicator - line from center to head
             ctx.strokeWeight = 2;
             ctx.strokeStyle = this.colors.front_indicator;
@@ -322,7 +373,7 @@ window.onload = () => {
             ctx.moveTo(this.pos.x, this.pos.y);
             ctx.lineTo(this.points.p1.x, this.points.p1.y);
             ctx.stroke();
-        
+
             //Update Leaderboard Score
             leaderboard.updateEntry(this.socketID, this.score);
             //Update score in score-div
@@ -332,13 +383,16 @@ window.onload = () => {
             this.drawAmmoBar();
         }
         drawAmmoBar() {
-            //this.ammo.draw();
+            this.ammo.draw();
         }
         shoot() {
-            this.projectiles.push(new Projectile(this.socketID, this.colors.body, this.points.p1.x, this.points.p1.y, this.vel.x, this.vel.y, this.angle));
-            let r0 = (this.angle * Math.PI) / 180;
-            this.vel.x += -(Math.cos(r0) * (this.shot_recoil));
-            this.vel.y += -(Math.sin(r0) * (this.shot_recoil));
+            if(this.ammo.canShoot()) {
+                this.projectiles.push(new Projectile(this.socketID, this.colors.body, this.points.p1.x, this.points.p1.y, this.vel.x, this.vel.y, this.angle));
+                let r0 = (this.angle * Math.PI) / 180;
+                this.vel.x += -(Math.cos(r0) * (this.shot_recoil));
+                this.vel.y += -(Math.sin(r0) * (this.shot_recoil));
+                this.ammo.shot();
+            }
         }
         update() {
             let r0 = (this.angle * Math.PI) / 180;
@@ -388,8 +442,21 @@ window.onload = () => {
             // Line segment intersection needed
         }
         updateProjectiles() {
+            //! Not Effecient - removing projectiles after update loop. TOO MANY LOOPS
+            let remove = [];
             for(let i = 0; i < this.projectiles.length; i++) {
-                this.projectiles[i].update();
+                if(this.projectiles[i].pos.x > width + this.projectiles[i].radius || 
+                    this.projectiles[i].pos.x < 0 - this.projectiles[i].radius || 
+                    this.projectiles[i].pos.y > height + this.projectiles[i].radius || 
+                    this.projectiles[i].pos.y < 0 - this.projectiles[i].radius) {
+                        // outside bounds
+                        remove.push(i);
+                } else {
+                    this.projectiles[i].update();
+                }
+            }
+            for(let i = 0; i < remove.length; i++) {
+                this.projectiles.splice(remove[i], 1);
             }
         }
         checkControls() {
