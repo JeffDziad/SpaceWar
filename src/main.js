@@ -451,7 +451,7 @@ window.onload = () => {
                     this.points.p3.x, this.points.p3.y, 
                     p.pos.x, p.pos.y);
                 if(intersect) {
-                    console.log('projectile collision');
+                    // 1. 
                 }
             }  
         }
