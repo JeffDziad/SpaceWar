@@ -436,10 +436,24 @@ window.onload = () => {
             this.wallCollisions();
             this.checkControls();
             this.updateProjectiles();
+            this.projectileCollisions();
             this.draw();
         }
         opponentCollisions() {
             // Line segment intersection needed
+        }
+        projectileCollisions() {
+            // Loop through this.projectiles and opponent projectiles.
+            for(let i = 0; i < this.projectiles.length; i++) {
+                let p = this.projectiles[i];
+                let intersect = Utilities.isInside(this.points.p1.x, this.points.p1.y, 
+                    this.points.p2.x, this.points.p2.y, 
+                    this.points.p3.x, this.points.p3.y, 
+                    p.pos.x, p.pos.y);
+                if(intersect) {
+                    console.log('projectile collision');
+                }
+            }  
         }
         updateProjectiles() {
             //! Not Effecient - removing projectiles after update loop. TOO MANY LOOPS
