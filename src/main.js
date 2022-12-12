@@ -379,11 +379,6 @@ window.onload = () => {
             //Update score in score-div
             this.drawScore();
 
-            //draw ammo bar
-            this.drawAmmoBar();
-        }
-        drawAmmoBar() {
-            this.ammo.draw();
         }
         shoot() {
             if(this.ammo.canShoot()) {
@@ -451,9 +446,26 @@ window.onload = () => {
                     this.points.p3.x, this.points.p3.y, 
                     p.pos.x, p.pos.y);
                 if(intersect) {
-                    // 1. 
+                    this.killedBy(p);
                 }
-            }  
+            } 
+            for(let i = 0; i < opponents.length; i++) {
+                let o = opponents[i];
+                for(let j = 0; j < o.od.projectiles.length; j++) {
+                    let p = o.od.projectiles[j];
+                    let intersect = Utilities.isInside(o.od.points.p1.x, o.od.points.p1.y, 
+                        o.od.points.p2.x, o.od.points.p2.y, 
+                        o.od.points.p3.x, o.od.points.p3.y, 
+                        p.pos.x, p.pos.y);
+                    console.log(p.pos.x, p.pos.y); 
+                    if(intersect) {
+                        this.killedBy(p);
+                    }
+                }
+            } 
+        }
+        killedBy(projectile) {
+            console.log(projectile);
         }
         updateProjectiles() {
             //! Not Effecient - removing projectiles after update loop. TOO MANY LOOPS
@@ -577,9 +589,12 @@ window.onload = () => {
 
     function animate() {
         bgFill('black');
-        if(player) player.update();
         if(join_success) sendPlayerUpdate();
         updateOpponents();
+        if(player)  {
+            player.update();
+            player.ammo.draw();
+        }
         updateLeaderboard();
         requestAnimationFrame(animate);
     }
