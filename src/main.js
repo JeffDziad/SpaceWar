@@ -438,6 +438,7 @@ window.onload = () => {
             // Line segment intersection needed
         }
         projectileCollisions() {
+            //! Not detecting well
             // Loop through this.projectiles and opponent projectiles.
             for(let i = 0; i < this.projectiles.length; i++) {
                 let p = this.projectiles[i];
