@@ -196,6 +196,30 @@ window.onload = () => {
         }
     }
 
+    class ThrustTrail {
+        constructor(p0, p1) {
+            // {x, y}
+            this.p0 = p0;
+            this.p1 = p1;
+
+            this.createdMS = performance.now();
+            this.destroyMS = 100;
+            this.canDestroy = false;
+        }
+        draw() {
+            ctx.strokeStyle = "dodgerblue";
+            ctx.moveTo(this.p0.x, this.p0.y);
+            ctx.lineTo(this.p1.x, this.p1.y);
+            ctx.stroke();
+        }
+        update() {
+            if(performance.now() - this.createdMS > this.destroyMS) {
+                this.canDestroy = true;
+            }
+            this.draw();
+        }
+    }
+
     class Opponent {
         constructor(socketID, oppData) {
             this.lastUpdate = performance.now();
@@ -309,6 +333,9 @@ window.onload = () => {
             // weapons 
             this.projectiles = [];
 
+            // cosmetic
+            this.thrust_trails = [];
+
             // Initialize leaderboard placement
             leaderboard.addEntry(this.socketID, this.player_name, this.colors.body, this.score);
         }
@@ -371,11 +398,15 @@ window.onload = () => {
             // draw engine
             ctx.strokeStyle="black";
             ctx.strokeWeight = 5;
-            if(this.controls.forward) {
-                let g = Math.cos(this.colors.engineValue) * 200;
+            if(this.controls.forward || this.controls.reverse) {
+                let g = (Math.cos(this.colors.engineValue) * 100) + 144;
                 //let b = Math.sin(this.colors.engineValue) * 170;
-                this.colors.engineValue += (this.colors.engineSpeed*this.vel);
+                this.colors.engineValue += (this.colors.engineSpeed*(this.vel.x + this.vel.y));
                 ctx.fillStyle = `rgba(30, ${g}, 255, 1)`;
+                //if(g >= 100) {
+                    // draw trail
+                    this.thrust_trails.push(new ThrustTrail(this.points.p2, this.points.p3));
+                //}
             } else {
                 ctx.fillStyle = `rgba(30, 144, 255, 1)`;
             }
@@ -440,11 +471,16 @@ window.onload = () => {
             this.acc.x = 0;
             this.acc.y = 0;
 
+            this.checkControls();
+
             this.opponentCollisions();
             this.wallCollisions();
-            this.checkControls();
+
+            this.updateThrustTrail();
+
             this.updateProjectiles();
             this.projectileCollisions();
+
             this.draw();
         }
         opponentCollisions() {
@@ -463,6 +499,7 @@ window.onload = () => {
                     this.killedBy(p);
                 }
             } 
+            //! Still not detecting opponents projectiles.
             for(let i = 0; i < opponents.length; i++) {
                 let o = opponents[i];
                 for(let j = 0; j < o.od.projectiles.length; j++) {
@@ -471,7 +508,6 @@ window.onload = () => {
                         o.od.points.p2.x, o.od.points.p2.y, 
                         o.od.points.p3.x, o.od.points.p3.y, 
                         p.pos.x, p.pos.y);
-                    console.log(p.pos.x, p.pos.y); 
                     if(intersect) {
                         this.killedBy(p);
                     }
@@ -503,6 +539,18 @@ window.onload = () => {
             if(this.controls.shoot) {
                 this.controls.shoot = false;
                 this.shoot();
+            }
+        }
+        updateThrustTrail() {
+            let destroyPool = [];
+            for(let i = 0; i < this.thrust_trails.length; i++) {
+                this.thrust_trails[i].update();
+                if(this.thrust_trails[i].canDestroy) {
+                    destroyPool.push(i);
+                }
+            }
+            for(let i = 0; i < destroyPool.length; i++) {
+                this.thrust_trails.splice(destroyPool[i], 1);
             }
         }
         drawScore() {
