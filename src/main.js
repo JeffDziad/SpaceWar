@@ -234,8 +234,8 @@ window.onload = () => {
             ctx.lineTo(this.od.points.p1.x, this.od.points.p1.y);
             ctx.fill();
             // draw front indicator - line from center to head
-            ctx.strokeWeight = 2;
-            ctx.strokeStyle = this.od.colors.front_indicator;
+            ctx.strokeWeight = 10;
+            ctx.strokeStyle = "black";
             ctx.beginPath();
             ctx.moveTo(this.od.pos.x, this.od.pos.y);
             ctx.lineTo(this.od.points.p1.x, this.od.points.p1.y);
@@ -271,6 +271,8 @@ window.onload = () => {
             this.colors = {
                 body: body_color,
                 front_indicator: "white",
+                engineValue: 0,
+                engineSpeed: 0.1,
             };
             this.pos = {
                 x: iX,
@@ -282,7 +284,7 @@ window.onload = () => {
                 p3: 0
             };
             this.controls = {
-                foward: false,
+                forward: false,
                 reverse: false,
                 left: false,
                 right: false,
@@ -366,12 +368,23 @@ window.onload = () => {
             ctx.fill();
             ctx.stroke();
 
-            // draw front indicator - line from center to head
-            ctx.strokeWeight = 2;
-            ctx.strokeStyle = this.colors.front_indicator;
+            // draw engine
+            ctx.strokeStyle="black";
+            ctx.strokeWeight = 5;
+            if(this.controls.forward) {
+                let g = Math.cos(this.colors.engineValue) * 200;
+                //let b = Math.sin(this.colors.engineValue) * 170;
+                this.colors.engineValue += (this.colors.engineSpeed*this.vel);
+                ctx.fillStyle = `rgba(30, ${g}, 255, 1)`;
+            } else {
+                ctx.fillStyle = `rgba(30, 144, 255, 1)`;
+            }
             ctx.beginPath();
             ctx.moveTo(this.pos.x, this.pos.y);
-            ctx.lineTo(this.points.p1.x, this.points.p1.y);
+            ctx.lineTo(this.points.p2.x, this.points.p2.y);
+            ctx.lineTo(this.points.p3.x, this.points.p3.y);
+            ctx.lineTo(this.pos.x, this.pos.y);
+            ctx.fill();
             ctx.stroke();
 
             //Update Leaderboard Score
