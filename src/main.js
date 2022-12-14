@@ -197,10 +197,16 @@ window.onload = () => {
     }
 
     class ThrustTrail {
-        constructor(p0, p1) {
+        constructor(p0, p1, p2, velX, velY) {
             // {x, y}
             this.p0 = p0;
             this.p1 = p1;
+            this.p2 = p2;
+
+            this.vel = {
+                x: velX, 
+                y: velY,
+            }
 
             this.createdMS = performance.now();
             this.destroyMS = 100;
@@ -209,14 +215,26 @@ window.onload = () => {
         draw() {
             ctx.strokeStyle = "dodgerblue";
             ctx.moveTo(this.p0.x, this.p0.y);
+            ctx.lineTo(this.p2.x, this.p2.y);
             ctx.lineTo(this.p1.x, this.p1.y);
             ctx.stroke();
         }
         update() {
             if(performance.now() - this.createdMS > this.destroyMS) {
                 this.canDestroy = true;
+            } else {
+                this.p0.x += this.vel.x;
+                this.p0.y += this.vel.y;
+    
+                this.p1.x += this.vel.x;
+                this.p1.y += this.vel.y;
+    
+                this.p2.x += this.vel.x;
+                this.p2.y += this.vel.y;
+
+                this.draw();
             }
-            this.draw();
+            
         }
     }
 
@@ -405,7 +423,10 @@ window.onload = () => {
                 ctx.fillStyle = `rgba(30, ${g}, 255, 1)`;
                 //if(g >= 100) {
                     // draw trail
-                    this.thrust_trails.push(new ThrustTrail(this.points.p2, this.points.p3));
+                    let r0 = (this.angle * Math.PI) / 180;
+                    let vx = -((Math.cos(r0)) * (1.5));
+                    let vy = -((Math.sin(r0)) * (1.5));
+                    this.thrust_trails.push(new ThrustTrail(this.points.p2, this.points.p3, {x: this.pos.x, y: this.pos.y}, vx, vy));
                 //}
             } else {
                 ctx.fillStyle = `rgba(30, 144, 255, 1)`;
@@ -544,10 +565,10 @@ window.onload = () => {
         updateThrustTrail() {
             let destroyPool = [];
             for(let i = 0; i < this.thrust_trails.length; i++) {
-                this.thrust_trails[i].update();
                 if(this.thrust_trails[i].canDestroy) {
                     destroyPool.push(i);
                 }
+                this.thrust_trails[i].update();
             }
             for(let i = 0; i < destroyPool.length; i++) {
                 this.thrust_trails.splice(destroyPool[i], 1);
