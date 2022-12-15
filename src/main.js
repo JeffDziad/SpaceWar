@@ -213,9 +213,12 @@ window.onload = () => {
             this.createdMS = performance.now();
             this.destroyMS = 100;
             this.canDestroy = false;
+            this.alpha_decayMS = 100;
         }
         draw() {
-            ctx.strokeStyle = "dodgerblue";
+            let alpha = ((performance.now() - this.createdMS) / this.alpha_decayMS);
+            console.log(alpha);
+            ctx.strokeStyle = `rgba(30, 144, 255, ${alpha})`;
             ctx.moveTo(this.p0.x, this.p0.y);
             ctx.lineTo(this.p2.x, this.p2.y);
             ctx.lineTo(this.p1.x, this.p1.y);
