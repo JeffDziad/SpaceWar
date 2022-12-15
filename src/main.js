@@ -197,15 +197,17 @@ window.onload = () => {
     }
 
     class ThrustTrail {
-        constructor(p0, p1, p2, velX, velY) {
+        constructor(p0, p1, p2, angle) {
             // {x, y}
+            this.angle = angle;
             this.p0 = p0;
             this.p1 = p1;
             this.p2 = p2;
+            this.speed = 2;
 
             this.vel = {
-                x: velX, 
-                y: velY,
+                x: 0, 
+                y: 0,
             }
 
             this.createdMS = performance.now();
@@ -223,6 +225,10 @@ window.onload = () => {
             if(performance.now() - this.createdMS > this.destroyMS) {
                 this.canDestroy = true;
             } else {
+                let r0 = (this.angle * Math.PI) / 180;
+                this.vel.x += -(Math.cos(r0) * this.speed)
+                this.vel.y += -(Math.sin(r0) * this.speed);
+
                 this.p0.x += this.vel.x;
                 this.p0.y += this.vel.y;
     
@@ -423,10 +429,10 @@ window.onload = () => {
                 ctx.fillStyle = `rgba(30, ${g}, 255, 1)`;
                 //if(g >= 100) {
                     // draw trail
-                    let r0 = (this.angle * Math.PI) / 180;
-                    let vx = -((Math.cos(r0)) * (1.5));
-                    let vy = -((Math.sin(r0)) * (1.5));
-                    this.thrust_trails.push(new ThrustTrail(this.points.p2, this.points.p3, {x: this.pos.x, y: this.pos.y}, vx, vy));
+                    // let r0 = (this.angle * Math.PI) / 180;
+                    // let vx = -((Math.cos(r0)) * (0.5));
+                    // let vy = -((Math.sin(r0)) * (0.5));
+                    this.thrust_trails.push(new ThrustTrail(this.points.p2, this.points.p3, {x: this.pos.x, y: this.pos.y}, this.angle));
                 //}
             } else {
                 ctx.fillStyle = `rgba(30, 144, 255, 1)`;
@@ -497,12 +503,12 @@ window.onload = () => {
             this.opponentCollisions();
             this.wallCollisions();
 
-            this.updateThrustTrail();
-
             this.updateProjectiles();
             this.projectileCollisions();
 
             this.draw();
+
+            this.updateThrustTrail();
         }
         opponentCollisions() {
             // Line segment intersection needed
