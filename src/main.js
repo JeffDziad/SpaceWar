@@ -535,8 +535,8 @@ window.onload = () => {
                 for(let j = 0; j < o.od.projectiles.length; j++) {
                     let p = o.od.projectiles[j];
                     let intersect = Utilities.isInside(o.od.points.p1.x, o.od.points.p1.y, 
-                        o.od.points.p2.x, o.od.points.p2.y, 
-                        o.od.points.p3.x, o.od.points.p3.y, 
+                        this.points.p2.x, this.points.p2.y, 
+                        this.points.p3.x, this.points.p3.y, 
                         p.pos.x, p.pos.y);
                     if(intersect) {
                         this.killedBy(p);
@@ -545,7 +545,7 @@ window.onload = () => {
             } 
         }
         killedBy(projectile) {
-            console.log(projectile);
+            console.log(projectile.owner);
         }
         updateProjectiles() {
             //! Not Effecient - removing projectiles after update loop. TOO MANY LOOPS
@@ -574,7 +574,7 @@ window.onload = () => {
         updateThrustTrail() {
             let destroyPool = [];
             for(let i = 0; i < this.thrust_trails.length; i++) {
-                if(this.thrust_trails[i].canDestroy) {
+                if(this.thrust_trails[i].canDestroy ) {
                     destroyPool.push(i);
                 }
                 this.thrust_trails[i].update();
