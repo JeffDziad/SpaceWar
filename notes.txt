@@ -1,7 +1,7 @@
 X - 1. Add functionallity to make every player in a rooms game size
     to the player with the smallest possible screen size.
 
-2. Use gradient on Leaderboard. Use black on the left whith white text, display username here. 
+2. Use gradient on Leaderboard. Use black on the left with white text, display username here. 
     Use the color of the player for the center, and use black on the right with white text. The 
     right displays score.
 
