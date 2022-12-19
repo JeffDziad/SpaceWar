@@ -213,10 +213,12 @@ window.onload = () => {
             this.createdMS = performance.now();
             this.destroyMS = 100;
             this.canDestroy = false;
-            this.alpha_decayMS = 100;
+            this.alpha_decayMS = 1;
         }
         draw() {
-            let alpha = ((performance.now() - this.createdMS) / this.alpha_decayMS);
+            //let alpha = ((performance.now() - this.createdMS)-0)/(100 - 0);
+            let alpha = Math.sin((performance.now() - this.createdMS));
+            alpha = 0.5 - alpha;
             ctx.strokeStyle = `rgba(30, 144, 255, ${alpha})`;
             ctx.moveTo(this.p0.x, this.p0.y);
             ctx.lineTo(this.p2.x, this.p2.y);
