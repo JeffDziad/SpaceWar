@@ -211,14 +211,14 @@ window.onload = () => {
             }
 
             this.createdMS = performance.now();
-            this.destroyMS = 100;
+            this.destroyMS = 60;
             this.canDestroy = false;
             this.alpha_decayMS = 1;
         }
         draw() {
             //let alpha = ((performance.now() - this.createdMS)-0)/(100 - 0);
             let alpha = Math.sin((performance.now() - this.createdMS));
-            alpha = 0.5 - alpha;
+            alpha = 1 - alpha;
             ctx.strokeStyle = `rgba(30, 144, 255, ${alpha})`;
             ctx.moveTo(this.p0.x, this.p0.y);
             ctx.lineTo(this.p2.x, this.p2.y);
@@ -431,13 +431,7 @@ window.onload = () => {
                 //let b = Math.sin(this.colors.engineValue) * 170;
                 this.colors.engineValue += (this.colors.engineSpeed*(this.vel.x + this.vel.y));
                 ctx.fillStyle = `rgba(30, ${g}, 255, 1)`;
-                //if(g >= 100) {
-                    // draw trail
-                    // let r0 = (this.angle * Math.PI) / 180;
-                    // let vx = -((Math.cos(r0)) * (0.5));
-                    // let vy = -((Math.sin(r0)) * (0.5));
-                    this.thrust_trails.push(new ThrustTrail(this.points.p2, this.points.p3, {x: this.pos.x, y: this.pos.y}, this.angle));
-                //}
+                this.thrust_trails.push(new ThrustTrail(this.points.p2, this.points.p3, {x: this.pos.x, y: this.pos.y}, this.angle));
             } else {
                 ctx.fillStyle = `rgba(30, 144, 255, 1)`;
             }
@@ -507,8 +501,9 @@ window.onload = () => {
             this.opponentCollisions();
             this.wallCollisions();
 
-            this.updateProjectiles();
             this.projectileCollisions();
+            this.updateProjectiles();
+            
 
             this.draw();
 
@@ -522,10 +517,11 @@ window.onload = () => {
             // Loop through this.projectiles and opponent projectiles.
             for(let i = 0; i < this.projectiles.length; i++) {
                 let p = this.projectiles[i];
-                let intersect = Utilities.isInside(this.points.p1.x, this.points.p1.y, 
-                    this.points.p2.x, this.points.p2.y, 
-                    this.points.p3.x, this.points.p3.y, 
-                    p.pos.x, p.pos.y);
+                // let intersect = Utilities.isInside(this.points.p1.x, this.points.p1.y, 
+                //     this.points.p2.x, this.points.p2.y, 
+                //     this.points.p3.x, this.points.p3.y, 
+                //     p.pos.x, p.pos.y);
+                let intersect = Utilities.isInside(p.pos, this.points.p1, this.points.p2, this.points.p3);
                 if(intersect) {
                     this.killedBy(p);
                 }
@@ -535,10 +531,11 @@ window.onload = () => {
                 let o = opponents[i];
                 for(let j = 0; j < o.od.projectiles.length; j++) {
                     let p = o.od.projectiles[j];
-                    let intersect = Utilities.isInside(o.od.points.p1.x, o.od.points.p1.y, 
-                        this.points.p2.x, this.points.p2.y, 
-                        this.points.p3.x, this.points.p3.y, 
-                        p.pos.x, p.pos.y);
+                    // let intersect = Utilities.isInside(o.od.points.p1.x, o.od.points.p1.y, 
+                    //     this.points.p2.x, this.points.p2.y, 
+                    //     this.points.p3.x, this.points.p3.y, 
+                    //     p.pos.x, p.pos.y);
+                    let intersect = Utilities.isInside(p.pos, this.points.p1, this.points.p2, this.points.p3);
                     if(intersect) {
                         this.killedBy(p);
                     }
@@ -575,7 +572,7 @@ window.onload = () => {
         updateThrustTrail() {
             let destroyPool = [];
             for(let i = 0; i < this.thrust_trails.length; i++) {
-                if(this.thrust_trails[i].canDestroy ) {
+                if(this.thrust_trails[i].canDestroy) {
                     destroyPool.push(i);
                 }
                 this.thrust_trails[i].update();

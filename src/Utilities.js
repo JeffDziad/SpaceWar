@@ -25,19 +25,14 @@ class Utilities {
         }
         return false;
     }
-    static area(x1, y1, x2, y2, x3, y3) {
-        return Math.abs((x1*(y2-y3) + x2*(y3-y1)+ x3*(y1-y2))/2.0);
+    static area(p1, p2, p3) {
+        return Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3. y-p1.y) + p3.x*(p1.y-p2.y))/2.0);
     }
-    static isInside(x1, y1, x2, y2, x3, y3, x, y) {
-        /* Calculate area of triangle ABC */
-        let A = this.area (x1, y1, x2, y2, x3, y3);
-        /* Calculate area of triangle PBC */
-        let A1 = this.area (x, y, x2, y2, x3, y3);
-        /* Calculate area of triangle PAC */
-        let A2 = this.area (x1, y1, x, y, x3, y3);
-        /* Calculate area of triangle PAB */   
-        let A3 = this.area (x1, y1, x2, y2, x, y);
-        /* Check if sum of A1, A2 and A3 is same as A */
-        return (A == A1 + A2 + A3);
+    static isInside(p, p1, p2, p3) {
+        let A = this.area(p1, p2, p3);
+        let A1 = this.area(p, p2, p3);
+        let A2 = this.area(p1, p, p3);
+        let A3 = this.area(p1, p2, p);
+        return (A === A1 + A2 + A3);
     }
 }
