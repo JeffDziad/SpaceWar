@@ -501,8 +501,9 @@ window.onload = () => {
             this.opponentCollisions();
             this.wallCollisions();
 
-            this.projectileCollisions();
             this.updateProjectiles();
+            this.projectileCollisions();
+            
             
 
             this.draw();
@@ -513,28 +514,18 @@ window.onload = () => {
             // Line segment intersection needed
         }
         projectileCollisions() {
-            //! Not detecting well
             // Loop through this.projectiles and opponent projectiles.
             for(let i = 0; i < this.projectiles.length; i++) {
                 let p = this.projectiles[i];
-                // let intersect = Utilities.isInside(this.points.p1.x, this.points.p1.y, 
-                //     this.points.p2.x, this.points.p2.y, 
-                //     this.points.p3.x, this.points.p3.y, 
-                //     p.pos.x, p.pos.y);
                 let intersect = Utilities.isInside(p.pos, this.points.p1, this.points.p2, this.points.p3);
                 if(intersect) {
                     this.killedBy(p);
                 }
             } 
-            //! Still not detecting opponents projectiles.
             for(let i = 0; i < opponents.length; i++) {
                 let o = opponents[i];
                 for(let j = 0; j < o.od.projectiles.length; j++) {
                     let p = o.od.projectiles[j];
-                    // let intersect = Utilities.isInside(o.od.points.p1.x, o.od.points.p1.y, 
-                    //     this.points.p2.x, this.points.p2.y, 
-                    //     this.points.p3.x, this.points.p3.y, 
-                    //     p.pos.x, p.pos.y);
                     let intersect = Utilities.isInside(p.pos, this.points.p1, this.points.p2, this.points.p3);
                     if(intersect) {
                         this.killedBy(p);
@@ -543,10 +534,14 @@ window.onload = () => {
             } 
         }
         killedBy(projectile) {
+            // 1. stop drawing player
+            // 2. add point to opponent (no points for hitting own projectiles)
+            // 3. start counter on screen from 3 - 1. Respawn player randomly on screen.
             console.log(projectile.owner);
         }
         updateProjectiles() {
             //! Not Effecient - removing projectiles after update loop. TOO MANY LOOPS
+            //? Check JS Fiddle for solution
             let remove = [];
             for(let i = 0; i < this.projectiles.length; i++) {
                 if(this.projectiles[i].pos.x > width + this.projectiles[i].radius || 

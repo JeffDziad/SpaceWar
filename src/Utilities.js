@@ -25,8 +25,18 @@ class Utilities {
         }
         return false;
     }
+    static fixed(x) {
+        return Number.parseFloat(x).toFixed(0);
+    }
     static area(p1, p2, p3) {
-        return Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3. y-p1.y) + p3.x*(p1.y-p2.y))/2.0);
+        let p1x = this.fixed(p1.x);
+        let p1y = this.fixed(p1.y);
+        let p2x = this.fixed(p2.x);
+        let p2y = this.fixed(p2.y);
+        let p3x = this.fixed(p3.x);
+        let p3y = this.fixed(p3.y);
+
+        return Math.abs((p1x*(p2y-p3y) + p2x*(p3y-p1y) + p3x*(p1y-p2y))/2.0);
     }
     static isInside(p, p1, p2, p3) {
         let A = this.area(p1, p2, p3);
