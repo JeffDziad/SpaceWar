@@ -41,6 +41,7 @@ window.onload = () => {
         join_success = false,
         opponent_timeout = 60000; // timeout after a minute of no new input
         opponents = [],
+        explosions = [],
         leaderboard = new Leaderboard();
 
     socket.on('game_init', (data) => {
@@ -104,7 +105,58 @@ window.onload = () => {
         positionScoreDiv();
     });
 
-    class Projectile {
+    class Explosion {
+        constructor(x, y, particleCount, color) {
+            this.color = color;
+            this.pos = {
+                x: x, 
+                y: y,
+            };
+            this.vel = {
+                x: rand(-2, 2),
+                y: rand(-2, 2),
+            };
+            this.created = performance.now();
+            this.lifetimeMS = 1000;
+            this.particles = [];
+            this.particleCount = particleCount;
+            this.status = true;
+            this.initialize();
+        }
+        initialize() {
+            for(let i = 0; i < this.particleCount; i++) {
+                let ivx = rand(-2, 2);
+                let ivy = rand(-2, 2);
+                let r0 = rand(0, 360, true) * (180/Math.PI);
+                this.particles.push(new Particle(null, this.color, this.pos.x, this.pos.y, ivx, ivy, r0));
+            }
+        }
+        draw() {
+            let alpha = 1 - ((performance.now() - this.created) / this.lifetimeMS);
+            console.log(alpha);
+            for(let i = 0; i < this.particles.length; i++) {
+                let p = this.particles[i];
+                ctx.fillStyle = `rgba(190, 190, 190, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(p.pos.x, p.pos.y, 3, 0, 2*Math.PI, false);
+                ctx.fill();
+            }
+        }
+        update() {
+            if(performance.now() - this.created > this.lifetimeMS) {
+                this.status = false;
+            } else {
+                for(let i = 0; i < this.particles.length; i++) {
+                    let p = this.particles[i];
+                    p.pos.x += p.vel.x;
+                    p.pos.y += p.vel.y;
+                }
+                this.draw();
+            }
+        }
+    }
+
+    class Particle {
         constructor(owner, color, startX, startY, iVelX, iVelY, fireAngle) {
             this.id = performance.now();
             // owner = socketID
@@ -299,14 +351,16 @@ window.onload = () => {
         drawProjectiles() {
             //! Not Effecient - creating new projectile every update
             for(let i = 0; i < this.od.projectiles.length; i++) {
-                let p = new Projectile(this.socketID, this.od.projectiles[i].color,
+                let p = new Particle(this.socketID, this.od.projectiles[i].color,
                     this.od.projectiles[i].pos.x, this.od.projectiles[i].pos.y, this.od.vel.x, this.od.vel.y, this.od.angle);
                 p.draw();
             }
         }
         update() {
-            this.drawProjectiles();
-            this.draw();
+            if(this.od.alive) {
+                this.drawProjectiles();
+                this.draw();
+            }
         }
     }
     class Player {
@@ -315,11 +369,10 @@ window.onload = () => {
             this.player_name = playerName;
             this.created = performance.now();
             this.recent = this.created;
-            // equilateral triangle
             this.radius = 25;
             this.angle = 0;
             this.score = 0;
-            // general variables
+            this.alive = true;
             this.colors = {
                 body: body_color,
                 front_indicator: "white",
@@ -385,6 +438,7 @@ window.onload = () => {
             });
         }
         draw() {
+            // Render player and other components only used when alive.
             // calculate point positions
             let r1 = (this.angle * Math.PI) / 180;
             this.points.p1 = {
@@ -447,12 +501,13 @@ window.onload = () => {
             leaderboard.updateEntry(this.socketID, this.score);
             //Update score in score-div
             this.drawScore();
-
         }
         shoot() {
             if(this.ammo.canShoot()) {
-                this.projectiles.push(new Projectile(this.socketID, this.colors.body, this.points.p1.x, this.points.p1.y, this.vel.x, this.vel.y, this.angle));
                 let r0 = (this.angle * Math.PI) / 180;
+                let nx = this.points.p1.x + (Math.cos(r0) * 2);
+                let ny = this.points.p1.y + (Math.cos(r0) * 2);
+                this.projectiles.push(new Particle(this.socketID, this.colors.body, nx, ny, this.vel.x, this.vel.y, this.angle));
                 this.vel.x += -(Math.cos(r0) * (this.shot_recoil));
                 this.vel.y += -(Math.sin(r0) * (this.shot_recoil));
                 this.ammo.shot();
@@ -494,38 +549,45 @@ window.onload = () => {
 
             // reset acceleration
             this.acc.x = 0;
-            this.acc.y = 0;
-
-            this.checkControls();
-
-            this.opponentCollisions();
-            this.wallCollisions();
-
-            this.updateProjectiles();
-            this.projectileCollisions();
+            this.acc.y = 0;            
             
+            if(this.alive) {
+                this.checkControls();
+                this.opponentCollisions();
+                this.wallCollisions();
+                this.projectileCollisions();
+                this.updateProjectiles();
+                this.draw();
+                this.updateThrustTrail();
+            }
             
-
-            this.draw();
-
-            this.updateThrustTrail();
         }
         opponentCollisions() {
             // Line segment intersection needed
         }
         projectileCollisions() {
+            //! Not detecting well
             // Loop through this.projectiles and opponent projectiles.
             for(let i = 0; i < this.projectiles.length; i++) {
                 let p = this.projectiles[i];
+                // let intersect = Utilities.isInside(this.points.p1.x, this.points.p1.y, 
+                //     this.points.p2.x, this.points.p2.y, 
+                //     this.points.p3.x, this.points.p3.y, 
+                //     p.pos.x, p.pos.y);
                 let intersect = Utilities.isInside(p.pos, this.points.p1, this.points.p2, this.points.p3);
                 if(intersect) {
                     this.killedBy(p);
                 }
             } 
-            for(let i = 0; i < opponents.length; i++) {
+            //! Still not detecting opponents projectiles.
+            for(let i = 0; i < opponents.length; i++) { 
                 let o = opponents[i];
                 for(let j = 0; j < o.od.projectiles.length; j++) {
                     let p = o.od.projectiles[j];
+                    // let intersect = Utilities.isInside(o.od.points.p1.x, o.od.points.p1.y, 
+                    //     this.points.p2.x, this.points.p2.y, 
+                    //     this.points.p3.x, this.points.p3.y, 
+                    //     p.pos.x, p.pos.y);
                     let intersect = Utilities.isInside(p.pos, this.points.p1, this.points.p2, this.points.p3);
                     if(intersect) {
                         this.killedBy(p);
@@ -534,14 +596,15 @@ window.onload = () => {
             } 
         }
         killedBy(projectile) {
-            // 1. stop drawing player
-            // 2. add point to opponent (no points for hitting own projectiles)
-            // 3. start counter on screen from 3 - 1. Respawn player randomly on screen.
-            console.log(projectile.owner);
+            this.alive = false;
+            this.explode();
+        }
+        explode() {
+            explosions.push(new Explosion(this.pos.x, this.pos.y, 10, this.colors.body));
+            console.log('exploded', explosions);
         }
         updateProjectiles() {
             //! Not Effecient - removing projectiles after update loop. TOO MANY LOOPS
-            //? Check JS Fiddle for solution
             let remove = [];
             for(let i = 0; i < this.projectiles.length; i++) {
                 if(this.projectiles[i].pos.x > width + this.projectiles[i].radius || 
@@ -672,6 +735,18 @@ window.onload = () => {
         score_div.style.left = `${boundBox.left+20}px`;
     }
 
+    function updateExplosions() {
+        for(let i = 0; i < explosions.length; i++) {
+            if(true) {
+                explosions[i].update();
+            } else {
+                console.log('explision.update');
+                explosions.splice(i, 1);
+                i--;
+            }
+        }
+    }
+
     function animate() {
         bgFill('black');
         if(join_success) sendPlayerUpdate();
@@ -680,6 +755,7 @@ window.onload = () => {
             player.update();
             player.ammo.draw();
         }
+        updateExplosions();
         updateLeaderboard();
         requestAnimationFrame(animate);
     }

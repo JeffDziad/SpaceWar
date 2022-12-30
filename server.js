@@ -21,14 +21,14 @@ class GameRoom {
         // Add game room id to socket data.
         socket.data.roomid = this.id;
         socket.data.roomName = this.getRoomName();
-        console.log(socket.id + " joined gameroom " + this.getRoomName() + ".");
+        console.log(socket.id + " joined " + this.getRoomName() + ".");
     }
     removeClient(socket, index) {
         this.client_count--;
         this.clients.splice(index, 1);
         socket.leave(this.getRoomName());
         //socket.broadcast.to(socket.data.roomName).emit('opponent-leave', socket);
-        console.log(socket.id + " left gameroom " + this.getRoomName() + ".");
+        console.log(socket.id + " left " + this.getRoomName() + ".");
     }
     validateAndJoin(socket, name, color) {
         for(let i = 0; i < this.clients.length; i++) {
