@@ -115,6 +115,10 @@ io.on('connection', (socket) => {
         socket.broadcast.to(socket.data.roomName).emit('opponent-update', {opp: player, socketID: socket.id});
     });
 
+    socket.on('player-shoot', () => {
+        socket.broadcast.to(socket.data.roomName).emit('player-shoot');
+    });
+
     socket.on('explosion', (explosion) => {
         socket.broadcast.to(socket.data.roomName).emit('add-explosion', explosion);
     });

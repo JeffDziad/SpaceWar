@@ -42,7 +42,8 @@ window.onload = () => {
         opponent_timeout = 60000; // timeout after a minute of no new input
         opponents = [],
         explosions = [],
-        leaderboard = new Leaderboard();
+        leaderboard = new Leaderboard(),
+        soundManager = new SoundManager();
 
     socket.on('game_init', (data) => {
         let d = data.game_vars;
@@ -101,12 +102,12 @@ window.onload = () => {
     });
 
     socket.on('add-explosion', (data) => {
-        let e = new Explosion(data.pos.x, data.pos.y, data.particleCount, data.color, data.vel.x, data.vel.y);
+        let e = new Explosion(data.pos.x, data.pos.y, data.particleCount, data.color);
         explosions.push(e);
     })
 
     socket.on('killed-by', (data) => {
-        console.log(data);
+        soundManager.play('explosion-1');
         if(data.projectile.owner === socket.id && data.playerID !== socket.id) {
             // add score
             player.score++;
@@ -120,21 +121,21 @@ window.onload = () => {
         }
     });
 
+    socket.on('player-shoot', () => {
+        soundManager.play('main-weapon');
+    });
+
     // Global Listeners
     addEventListener('resize', () => {
         positionScoreDiv();
     });
 
     class Explosion {
-        constructor(x, y, particleCount, color, iVelX=rand(-2, 2), iVelY=rand(-2, 2)) {
+        constructor(x, y, particleCount, color) {
             this.color = color;
             this.pos = {
                 x: x, 
                 y: y,
-            };
-            this.vel = {
-                x: iVelX,
-                y: iVelY,
             };
             this.created = performance.now();
             this.lifetimeMS = 1000;
@@ -143,26 +144,23 @@ window.onload = () => {
             this.status = true;
             this.initialize();
         }
-        static Construct() {
-
-        }
         initialize() {
             for(let i = 0; i < this.particleCount; i++) {
                 let ivx = rand(-2, 2);
                 let ivy = rand(-2, 2);
                 let r0 = rand(0, 360, true) * (180/Math.PI);
-                this.particles.push(new Particle(null, this.color, this.pos.x, this.pos.y, ivx, ivy, r0));
+                this.particles.push(new Particle(null, this.color, this.pos.x, this.pos.y, ivx, ivy, r0, rand(0.5, 5), 1));
             }
         }
         draw() {
-            let alpha = 1 - ((performance.now() - this.created) / this.lifetimeMS);
-            for(let i = 0; i < this.particles.length; i++) {
-                let p = this.particles[i];
-                ctx.fillStyle = `rgba(190, 190, 190, ${alpha})`;
-                ctx.beginPath();
-                ctx.arc(p.pos.x, p.pos.y, 3, 0, 2*Math.PI, false);
-                ctx.fill();
-            }
+            // let alpha = 1 - ((performance.now() - this.created) / this.lifetimeMS);
+            // for(let i = 0; i < this.particles.length; i++) {
+            //     let p = this.particles[i];
+            //     ctx.fillStyle = `rgba(190, 190, 190, ${alpha})`;
+            //     ctx.beginPath();
+            //     ctx.arc(p.pos.x, p.pos.y, 3, 0, 2*Math.PI, false);
+            //     ctx.fill();
+            // }
         }
         update() {
             if(performance.now() - this.created > this.lifetimeMS) {
@@ -170,8 +168,9 @@ window.onload = () => {
             } else {
                 for(let i = 0; i < this.particles.length; i++) {
                     let p = this.particles[i];
-                    p.pos.x += p.vel.x;
-                    p.pos.y += p.vel.y;
+                    let alpha = 1 - ((performance.now() - this.created) / this.lifetimeMS);
+                    p.color = `rgba(190, 190, 190, ${alpha})`;
+                    p.update();
                 }
                 this.draw();
             }
@@ -179,7 +178,7 @@ window.onload = () => {
     }
 
     class Particle {
-        constructor(owner, color, startX, startY, iVelX, iVelY, fireAngle) {
+        constructor(owner, color, startX, startY, iVelX, iVelY, fireAngle, radius=4, speed=6) {
             this.id = performance.now();
             // owner = socketID
             this.owner = owner;
@@ -192,9 +191,9 @@ window.onload = () => {
                 y: iVelY
             }
             this.angle = fireAngle;
-            this.speed = 6;
+            this.speed = speed;
             this.color = color;
-            this.radius = 4;
+            this.radius = radius;
         }
         draw() {
             ctx.fillStyle = this.color;
@@ -538,6 +537,7 @@ window.onload = () => {
         }
         shoot() {
             if(this.ammo.canShoot()) {
+                socket.emit('player-shoot');
                 let r0 = (this.angle * Math.PI) / 180;
                 let nx = this.points.p1.x + (Math.cos(r0) * 5);
                 let ny = this.points.p1.y + (Math.sin(r0) * 5);
@@ -644,7 +644,7 @@ window.onload = () => {
             this.explode();
         }
         explode() {
-            let e = new Explosion(this.pos.x, this.pos.y, 10, this.colors.body);
+            let e = new Explosion(this.pos.x, this.pos.y, 25, this.colors.body);
             explosions.push(e);
             socket.emit('explosion', e);
         }
