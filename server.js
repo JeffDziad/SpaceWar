@@ -115,6 +115,14 @@ io.on('connection', (socket) => {
         socket.broadcast.to(socket.data.roomName).emit('opponent-update', {opp: player, socketID: socket.id});
     });
 
+    socket.on('explosion', (explosion) => {
+        socket.broadcast.to(socket.data.roomName).emit('add-explosion', explosion);
+    });
+
+    socket.on('killed-by', (playerIDprojectile) => {
+        socket.broadcast.to(socket.data.roomName).emit('killed-by', playerIDprojectile);
+    });
+
     socket.on('disconnect', () => {
         socket.broadcast.to(socket.data.roomName).emit('opponent-disconnect', socket.id);
         unassignRoom(socket);

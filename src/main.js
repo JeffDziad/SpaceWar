@@ -100,21 +100,41 @@ window.onload = () => {
         }
     });
 
+    socket.on('add-explosion', (data) => {
+        let e = new Explosion(data.pos.x, data.pos.y, data.particleCount, data.color, data.vel.x, data.vel.y);
+        explosions.push(e);
+    })
+
+    socket.on('killed-by', (data) => {
+        console.log(data);
+        if(data.projectile.owner === socket.id && data.playerID !== socket.id) {
+            // add score
+            player.score++;
+            // remove projectile
+            for(let i = 0; i < player.projectiles.length; i++) {
+                if(player.projectiles[i].id === data.projectile.id) {
+                    player.projectiles.splice(i, 1);
+                    break;
+                }
+            }
+        }
+    });
+
     // Global Listeners
     addEventListener('resize', () => {
         positionScoreDiv();
     });
 
     class Explosion {
-        constructor(x, y, particleCount, color) {
+        constructor(x, y, particleCount, color, iVelX=rand(-2, 2), iVelY=rand(-2, 2)) {
             this.color = color;
             this.pos = {
                 x: x, 
                 y: y,
             };
             this.vel = {
-                x: rand(-2, 2),
-                y: rand(-2, 2),
+                x: iVelX,
+                y: iVelY,
             };
             this.created = performance.now();
             this.lifetimeMS = 1000;
@@ -122,6 +142,9 @@ window.onload = () => {
             this.particleCount = particleCount;
             this.status = true;
             this.initialize();
+        }
+        static Construct() {
+
         }
         initialize() {
             for(let i = 0; i < this.particleCount; i++) {
@@ -133,7 +156,6 @@ window.onload = () => {
         }
         draw() {
             let alpha = 1 - ((performance.now() - this.created) / this.lifetimeMS);
-            console.log(alpha);
             for(let i = 0; i < this.particles.length; i++) {
                 let p = this.particles[i];
                 ctx.fillStyle = `rgba(190, 190, 190, ${alpha})`;
@@ -305,7 +327,6 @@ window.onload = () => {
             this.lastUpdate = performance.now();
             this.socketID = socketID;
             this.od = oppData;
-
             this.projectiles = [];
             this.last_projectile_count = this.projectiles.length;
 
@@ -373,6 +394,7 @@ window.onload = () => {
             this.angle = 0;
             this.score = 0;
             this.alive = true;
+            this.lastDeath = this.created;
             this.colors = {
                 body: body_color,
                 front_indicator: "white",
@@ -403,6 +425,7 @@ window.onload = () => {
                 x: 0,
                 y: 0 
             };
+            this.respawnMS = 3000;
             this.shot_recoil = 1.5;
             this.rotate_speed = 3;
             this.acc_speed = 0.1;
@@ -436,6 +459,17 @@ window.onload = () => {
                 if(e.key == "a") this.controls.left = false;
                 if(e.key == "d") this.controls.right = false;
             });
+        }
+        spawn() {
+            this.controls = {};
+            this.projectiles = [];
+            this.vel.x = 0;
+            this.vel.y = 0;
+            this.acc.x = 0;
+            this.acc.y = 0;
+            this.pos.x = rand(100, canvas.width-100);
+            this.pos.y = rand(100, canvas.height-100);
+            this.alive = true;
         }
         draw() {
             // Render player and other components only used when alive.
@@ -505,8 +539,8 @@ window.onload = () => {
         shoot() {
             if(this.ammo.canShoot()) {
                 let r0 = (this.angle * Math.PI) / 180;
-                let nx = this.points.p1.x + (Math.cos(r0) * 2);
-                let ny = this.points.p1.y + (Math.cos(r0) * 2);
+                let nx = this.points.p1.x + (Math.cos(r0) * 5);
+                let ny = this.points.p1.y + (Math.sin(r0) * 5);
                 this.projectiles.push(new Particle(this.socketID, this.colors.body, nx, ny, this.vel.x, this.vel.y, this.angle));
                 this.vel.x += -(Math.cos(r0) * (this.shot_recoil));
                 this.vel.y += -(Math.sin(r0) * (this.shot_recoil));
@@ -559,35 +593,43 @@ window.onload = () => {
                 this.updateProjectiles();
                 this.draw();
                 this.updateThrustTrail();
+            } else {
+                this.awaitRespawn();
             }
-            
         }
+        drawRespawnCountdown() {
+            let t = ((performance.now() - this.lastDeath) / 1000);
+            t = 3 - t;
+            ctx.font = "50px Comic Sans MS";
+            ctx.fillStyle = "red";
+            ctx.textAlign = "center";
+            ctx.fillText(`${t.toFixed(0)}`, canvas.width/2, canvas.height/2);
+        }
+        awaitRespawn() {
+            if(performance.now() - this.lastDeath > this.respawnMS) {
+                // time to respawn
+                this.spawn();
+            } else {
+                // update death features
+                this.drawRespawnCountdown();
+            }
+        }   
         opponentCollisions() {
             // Line segment intersection needed
         }
         projectileCollisions() {
-            //! Not detecting well
             // Loop through this.projectiles and opponent projectiles.
             for(let i = 0; i < this.projectiles.length; i++) {
                 let p = this.projectiles[i];
-                // let intersect = Utilities.isInside(this.points.p1.x, this.points.p1.y, 
-                //     this.points.p2.x, this.points.p2.y, 
-                //     this.points.p3.x, this.points.p3.y, 
-                //     p.pos.x, p.pos.y);
                 let intersect = Utilities.isInside(p.pos, this.points.p1, this.points.p2, this.points.p3);
                 if(intersect) {
                     this.killedBy(p);
                 }
             } 
-            //! Still not detecting opponents projectiles.
             for(let i = 0; i < opponents.length; i++) { 
                 let o = opponents[i];
                 for(let j = 0; j < o.od.projectiles.length; j++) {
                     let p = o.od.projectiles[j];
-                    // let intersect = Utilities.isInside(o.od.points.p1.x, o.od.points.p1.y, 
-                    //     this.points.p2.x, this.points.p2.y, 
-                    //     this.points.p3.x, this.points.p3.y, 
-                    //     p.pos.x, p.pos.y);
                     let intersect = Utilities.isInside(p.pos, this.points.p1, this.points.p2, this.points.p3);
                     if(intersect) {
                         this.killedBy(p);
@@ -596,29 +638,28 @@ window.onload = () => {
             } 
         }
         killedBy(projectile) {
+            socket.emit('killed-by', {playerID: this.socketID, projectile: projectile});
             this.alive = false;
+            this.lastDeath = performance.now();
             this.explode();
         }
         explode() {
-            explosions.push(new Explosion(this.pos.x, this.pos.y, 10, this.colors.body));
-            console.log('exploded', explosions);
+            let e = new Explosion(this.pos.x, this.pos.y, 10, this.colors.body);
+            explosions.push(e);
+            socket.emit('explosion', e);
         }
         updateProjectiles() {
-            //! Not Effecient - removing projectiles after update loop. TOO MANY LOOPS
-            let remove = [];
             for(let i = 0; i < this.projectiles.length; i++) {
                 if(this.projectiles[i].pos.x > width + this.projectiles[i].radius || 
                     this.projectiles[i].pos.x < 0 - this.projectiles[i].radius || 
                     this.projectiles[i].pos.y > height + this.projectiles[i].radius || 
                     this.projectiles[i].pos.y < 0 - this.projectiles[i].radius) {
                         // outside bounds
-                        remove.push(i);
+                        this.projectiles.splice(i, 1);
+                        i--;
                 } else {
                     this.projectiles[i].update();
                 }
-            }
-            for(let i = 0; i < remove.length; i++) {
-                this.projectiles.splice(remove[i], 1);
             }
         }
         checkControls() {
