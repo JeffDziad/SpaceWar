@@ -116,7 +116,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('player-shoot', () => {
-        socket.broadcast.to(socket.data.roomName).emit('player-shoot');
+        io.sockets.in(socket.data.roomName).emit('player-shoot');
     });
 
     socket.on('explosion', (explosion) => {
