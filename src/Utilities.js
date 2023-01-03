@@ -45,4 +45,8 @@ class Utilities {
         let A3 = this.area(p1, p2, p);
         return (A === A1 + A2 + A3);
     }
+    static rand(min, max, floor=false) {
+        if(floor) return Math.floor(Math.random() * (max-min) + min);
+        else return Math.random() * (max-min) + min;
+    }
 }

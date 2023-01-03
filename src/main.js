@@ -43,7 +43,8 @@ window.onload = () => {
         opponents = [],
         explosions = [],
         leaderboard = new Leaderboard(),
-        soundManager = new SoundManager();
+        soundManager = new SoundManager(),
+        envManager = null;
 
     socket.on('game_init', (data) => {
         let d = data.game_vars;
@@ -122,7 +123,6 @@ window.onload = () => {
     });
 
     socket.on('player-shoot', () => {
-        console.log('shot');
         soundManager.play('main-weapon');
     });
 
@@ -147,21 +147,11 @@ window.onload = () => {
         }
         initialize() {
             for(let i = 0; i < this.particleCount; i++) {
-                let ivx = rand(-2, 2);
-                let ivy = rand(-2, 2);
-                let r0 = rand(0, 360, true) * (180/Math.PI);
-                this.particles.push(new Particle(null, this.color, this.pos.x, this.pos.y, ivx, ivy, r0, rand(0.5, 5), 1));
+                let ivx = Utilities.rand(-2, 2);
+                let ivy = Utilities.rand(-2, 2);
+                let r0 = Utilities.rand(0, 360, true) * (180/Math.PI);
+                this.particles.push(new Particle(null, this.color, this.pos.x, this.pos.y, ivx, ivy, r0, Utilities.rand(0.5, 5), 1));
             }
-        }
-        draw() {
-            // let alpha = 1 - ((performance.now() - this.created) / this.lifetimeMS);
-            // for(let i = 0; i < this.particles.length; i++) {
-            //     let p = this.particles[i];
-            //     ctx.fillStyle = `rgba(190, 190, 190, ${alpha})`;
-            //     ctx.beginPath();
-            //     ctx.arc(p.pos.x, p.pos.y, 3, 0, 2*Math.PI, false);
-            //     ctx.fill();
-            // }
         }
         update() {
             if(performance.now() - this.created > this.lifetimeMS) {
@@ -173,7 +163,6 @@ window.onload = () => {
                     p.color = `rgba(190, 190, 190, ${alpha})`;
                     p.update();
                 }
-                this.draw();
             }
         }
     }
@@ -467,8 +456,8 @@ window.onload = () => {
             this.vel.y = 0;
             this.acc.x = 0;
             this.acc.y = 0;
-            this.pos.x = rand(100, canvas.width-100);
-            this.pos.y = rand(100, canvas.height-100);
+            this.pos.x = Utilities.rand(100, canvas.width-100);
+            this.pos.y = Utilities.rand(100, canvas.height-100);
             this.alive = true;
         }
         draw() {
@@ -716,6 +705,9 @@ window.onload = () => {
     function init() {
         positionScoreDiv();
         leaderboard_div.style.width = `${width}px`;
+
+        envManager = new EnvironmentManager(canvas, ctx);
+
         animate();
     }
 
@@ -731,10 +723,7 @@ window.onload = () => {
         socket.emit('register-player', player);
     }
 
-    function rand(min, max, floor=true) {
-        if(floor) return Math.floor(Math.random() * (max-min) + min);
-        else return Math.random() * (max-min) + min;
-    }
+    
 
     function bgFill(color) {
         ctx.fillStyle = color;
@@ -791,6 +780,8 @@ window.onload = () => {
 
     function animate() {
         bgFill('black');
+        envManager.update();
+
         if(join_success) sendPlayerUpdate();
         updateOpponents();
         if(player)  {
