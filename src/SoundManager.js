@@ -8,11 +8,14 @@ class SoundManager {
         switch(audioID) {
             case 'main-weapon':
                 audio = new Audio(this.main_weapon);
-                audio.play();
                 break;
             case 'explosion-1':
                 audio = new Audio(this.explosion_1);
+        }
+        if(audio) {
+            try {
                 audio.play();
+            } catch {}
         }
     }
 }
