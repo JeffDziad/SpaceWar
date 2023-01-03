@@ -122,6 +122,7 @@ window.onload = () => {
     });
 
     socket.on('player-shoot', () => {
+        console.log('shot');
         soundManager.play('main-weapon');
     });
 
