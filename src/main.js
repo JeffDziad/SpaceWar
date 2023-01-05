@@ -400,6 +400,7 @@ window.onload = () => {
                 p3: 0
             };
             this.controls = {
+                speed_boost: false,
                 forward: false,
                 reverse: false,
                 left: false,
@@ -415,6 +416,7 @@ window.onload = () => {
                 y: 0 
             };
             this.respawnMS = 3000;
+            this.speedBoost = 0.2;
             this.shot_recoil = 1.5;
             this.rotate_speed = 3;
             this.acc_speed = 0.1;
@@ -438,6 +440,7 @@ window.onload = () => {
                 if(e.key == "s") this.controls.reverse = true;
                 if(e.key == "a") this.controls.left = true;
                 if(e.key == "d") this.controls.right = true;
+                if(e.key == "Control") this.controls.speed_boost = true;
             });
             addEventListener('keypress', (e) => {
                 if(e.code == "Space") this.controls.shoot = true;
@@ -447,6 +450,7 @@ window.onload = () => {
                 if(e.key == "s") this.controls.reverse = false;
                 if(e.key == "a") this.controls.left = false;
                 if(e.key == "d") this.controls.right = false;
+                if(e.key == "Control") this.controls.speed_boost = false;
             });
         }
         spawn() {
@@ -573,7 +577,9 @@ window.onload = () => {
 
             // reset acceleration
             this.acc.x = 0;
-            this.acc.y = 0;            
+            this.acc.y = 0;     
+            
+            this.checkSpeedBoost();
             
             if(this.alive) {
                 this.checkControls();
@@ -586,6 +592,15 @@ window.onload = () => {
             } else {
                 this.awaitRespawn();
             }
+        }
+        checkSpeedBoost() {
+            if(this.controls.speed_boost) {
+                let r0 = (this.angle * Math.PI) / 180;
+                let ax = Math.cos(r0) * this.speedBoost;
+                let ay = Math.sin(r0) * this.speedBoost;
+                this.applyForce(ax, ay);
+            }
+            
         }
         drawRespawnCountdown() {
             let t = ((performance.now() - this.lastDeath) / 1000);

@@ -7,6 +7,7 @@ class EnvironmentManager {
         this.canvas = canvas;
         this.ctx = context;
 
+        // Stars
         this.stars = [];
         this.generateStars();
     }
