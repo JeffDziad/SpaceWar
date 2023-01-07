@@ -127,6 +127,10 @@ io.on('connection', (socket) => {
         socket.broadcast.to(socket.data.roomName).emit('killed-by', playerIDprojectile);
     });
 
+    socket.on('outgoing-chat', (data) => {
+        socket.broadcast.to(socket.data.roomName).emit('incoming-chat', data);
+    });
+
     socket.on('disconnect', () => {
         socket.broadcast.to(socket.data.roomName).emit('opponent-disconnect', socket.id);
         unassignRoom(socket);

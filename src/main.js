@@ -44,7 +44,8 @@ window.onload = () => {
         explosions = [],
         leaderboard = new Leaderboard(),
         soundManager = new SoundManager(),
-        envManager = null;
+        envManager = null,
+        chatManager = null;
 
     socket.on('game_init', (data) => {
         let d = data.game_vars;
@@ -415,7 +416,7 @@ window.onload = () => {
                 x: 0,
                 y: 0 
             };
-            this.respawnMS = 3000;
+            this.respawnMS = 10000;
             this.speedBoost = 0.2;
             this.shot_recoil = 1.5;
             this.rotate_speed = 3;
@@ -720,9 +721,8 @@ window.onload = () => {
     function init() {
         positionScoreDiv();
         leaderboard_div.style.width = `${width}px`;
-
         envManager = new EnvironmentManager(canvas, ctx);
-
+        chatManager = new ChatManager(socket);
         animate();
     }
 
@@ -731,6 +731,7 @@ window.onload = () => {
         join_btn.style.disabled = true;
         player = new Player(socket.id, player_name.value, width/2, height/2, player_color.value);
         registerPlayer();
+        chatManager.activate(player);
         join_success = true;
     }
 
