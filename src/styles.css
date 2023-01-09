@@ -36,12 +36,15 @@
 }
 
 #chat-output {
+    padding-left: 5px;
+    overflow-y: scroll;
     width: 100%;
     height: 90%;
     justify-content: baseline;
 }
 
 #chat-input-container {
+    padding: 5px;
     width: 100%;
     height: 10%;
 }
@@ -49,6 +52,11 @@
 .chat-body-expanded {
     width: 400px !important;
     height: 250px !important;
+}
+
+.chat-message {
+    color: white;
+    display: inline;
 }
 
 #connection-status {
@@ -249,3 +257,20 @@ body {
     from {top:-300px; opacity:0}
     to {top:0; opacity:1}
 }
+
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: white;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: grey;
+}
+

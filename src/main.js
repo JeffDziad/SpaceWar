@@ -277,12 +277,9 @@ window.onload = () => {
             this.createdMS = performance.now();
             this.destroyMS = 60;
             this.canDestroy = false;
-            this.alpha_decayMS = 1;
         }
         draw() {
-            //let alpha = ((performance.now() - this.createdMS)-0)/(100 - 0);
-            let alpha = Math.sin((performance.now() - this.createdMS));
-            alpha = 1 - alpha;
+            let alpha = 1 - ((performance.now() - this.createdMS) / this.destroyMS);
             ctx.strokeStyle = `rgba(30, 144, 255, ${alpha})`;
             ctx.moveTo(this.p0.x, this.p0.y);
             ctx.lineTo(this.p2.x, this.p2.y);
@@ -437,6 +434,7 @@ window.onload = () => {
         }
         initEvents() {
             addEventListener('keydown', (e) => {
+                if(chatManager.isVisable()) console.log('hi');
                 if(e.key == "w") this.controls.forward = true;
                 if(e.key == "s") this.controls.reverse = true;
                 if(e.key == "a") this.controls.left = true;
@@ -605,9 +603,9 @@ window.onload = () => {
         }
         drawRespawnCountdown() {
             let t = ((performance.now() - this.lastDeath) / 1000);
-            t = 3 - t;
+            t = (this.respawnMS/1000) - t;
             ctx.font = "50px Comic Sans MS";
-            ctx.fillStyle = "red";
+            ctx.fillStyle = "white";
             ctx.textAlign = "center";
             ctx.fillText(`${t.toFixed(0)}`, canvas.width/2, canvas.height/2);
         }

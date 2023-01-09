@@ -22,28 +22,45 @@ class ChatManager {
         this.sendChat = () => {
             if(this.active) {
                 this.socket.emit('outgoing-chat', {sender: this.sender, msg: this.chat_input.value});
-                this.appendChat(this.sender, this.chat_input.value);
+                this.appendChat(this.sender.player_name, this.sender.colors.body, this.chat_input.value);
                 this.chat_input.value = "";
             } else {
-                alert('You must join the game to chat.');
+                this.appendChat(`[ Game ]`, 'orange', 'You must join the game to send chat messages!');
             }
             
         };
         this.toggle_btn.addEventListener('click', this.updateDisplayed.bind(this));
         this.chat_send_btn.addEventListener('click', this.sendChat.bind(this));
         socket.on('incoming-chat', (data) => {
-            this.appendChat(data.sender, data.msg);
+            this.appendChat(data.sender.player_name, data.sender.colors.body, data.msg);
         });
     }
     activate(sender) {
         this.sender = sender;
         this.active = true;
     }
-    appendChat(sender, msg) {
-        let out = document.createElement('span');
-        out.innerHTML = sender.player_name + ': ' + msg;
-        out.style.width = "100%";
-        out.style.color = "white";
-        this.chat_output.appendChild(out, this.chat_output.firstChild);
+    appendChat(prefix, prefixColor, msg) {
+        let container = document.createElement('div');
+        container.style.width = "100%";
+        container.style.display = "block";
+
+        let name = document.createElement('span');
+        name.innerHTML = prefix;
+        name.style.color = `${prefixColor}`;
+        name.style.display = 'inline-block';
+
+        let message = document.createElement('span');
+        message.classList.add('chat-message');
+        message.innerHTML = ': ' + msg;
+
+        container.appendChild(name);
+        container.appendChild(message);
+
+        this.chat_output.appendChild(container, this.chat_output.firstChild);
+
+        this.chat_output.scrollTop = this.chat_output.scrollHeight;
+    }
+    isVisable() {
+        return this.displayed;
     }
 }
