@@ -421,7 +421,8 @@ window.onload = () => {
             this.drag = 0.99;
             this.wall_force = 1;
             this.initEvents();
-            this.ammo = new Ammo();
+            this.ammo = new Ammo(),
+            this.ess = new EnginegSoundSynth([95, 50, 60]);
 
             // weapons 
             this.projectiles = [];
@@ -439,7 +440,7 @@ window.onload = () => {
                 if(e.key == "s") this.controls.reverse = true;
                 if(e.key == "a") this.controls.left = true;
                 if(e.key == "d") this.controls.right = true;
-                if(e.key == "Control") this.controls.speed_boost = true;
+                if(e.key == "NONE") this.controls.speed_boost = true;
             });
             addEventListener('keypress', (e) => {
                 if(e.code == "Space") this.controls.shoot = true;
@@ -449,7 +450,7 @@ window.onload = () => {
                 if(e.key == "s") this.controls.reverse = false;
                 if(e.key == "a") this.controls.left = false;
                 if(e.key == "d") this.controls.right = false;
-                if(e.key == "Control") this.controls.speed_boost = false;
+                if(e.key == "NONE") this.controls.speed_boost = false;
             });
         }
         spawn() {
@@ -588,9 +589,16 @@ window.onload = () => {
                 this.updateProjectiles();
                 this.draw();
                 this.updateThrustTrail();
+                this.ess.update(this.isThrusting());
             } else {
                 this.awaitRespawn();
             }
+        }
+        isThrusting() {
+            if(this.controls.forward || this.controls.reverse) {
+                return true;
+            }
+            return false;
         }
         checkSpeedBoost() {
             if(this.controls.speed_boost) {
