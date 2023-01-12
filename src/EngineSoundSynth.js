@@ -52,14 +52,14 @@ class EnginegSoundSynth {
         if(isThrusting) {
             if(this.waiting_restart) {
                 //! Idea 1
-                // gainContext.gain.value += this.gain_speed;
-                // if(gainContext.gain.value >= MAX_GAIN) {
-                //     this.waiting_restart = false;
-                //     gainContext.gain.value = MAX_GAIN;
-                // }
+                gainContext.gain.value += this.gain_speed;
+                if(gainContext.gain.value >= MAX_GAIN) {
+                    this.waiting_restart = false;
+                    gainContext.gain.value = MAX_GAIN;
+                }
 
                 //! Idea 2
-                gainContext.gain.value = MAX_GAIN;
+                //gainContext.gain.value = MAX_GAIN;
 
                 //! Idea 3
                 //! CANT GET SMOOTH TRANSITION FOR FADE IN/OUT of GAIN
