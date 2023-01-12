@@ -51,6 +51,7 @@ class EnginegSoundSynth {
     update(isThrusting) {
         if(isThrusting) {
             if(this.waiting_restart) {
+                gainContext.gain.value = MIN_GAIN;
                 //! Idea 1
                 gainContext.gain.value += this.gain_speed;
                 if(gainContext.gain.value >= MAX_GAIN) {
