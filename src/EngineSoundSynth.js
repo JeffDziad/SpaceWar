@@ -1,6 +1,7 @@
 const audioContext = new (window.AudioContext || window.webkitAudioContext)(),
     gainContext = audioContext.createGain(),
     MAX_GAIN = 0.5;
+    MIN_GAIN = 0.1;
 
 class Sample {
     constructor(hz) {
@@ -50,11 +51,22 @@ class EnginegSoundSynth {
     update(isThrusting) {
         if(isThrusting) {
             if(this.waiting_restart) {
-                gainContext.gain.value += this.gain_speed;
-                if(gainContext.gain.value >= MAX_GAIN) {
-                    this.waiting_restart = false;
-                    gainContext.gain.value = MAX_GAIN;
-                }
+                //! Idea 1
+                // gainContext.gain.value += this.gain_speed;
+                // if(gainContext.gain.value >= MAX_GAIN) {
+                //     this.waiting_restart = false;
+                //     gainContext.gain.value = MAX_GAIN;
+                // }
+
+                //! Idea 2
+                gainContext.gain.value = MAX_GAIN;
+
+                //! Idea 3
+                //! CANT GET SMOOTH TRANSITION FOR FADE IN/OUT of GAIN
+                // let now = audioContext.currentTime;
+                // gainContext.gain.setValueAtTime(gainContext.gain.value, now);
+                // gainContext.gain.linearRampToValueAtTime(MAX_GAIN, now + 0.3);
+                this.waiting_restart = false;
             } else {
                 this.last_thrust = performance.now();
                 this.rev_value += this.rev_acc;
@@ -65,7 +77,9 @@ class EnginegSoundSynth {
             if(performance.now() - this.last_thrust > this.engine_shutdown_MS) {
                 this.waiting_restart = true;
                 // silence gain
-                gainContext.gain.value -= this.gain_speed;
+                let now = audioContext.currentTime;
+                gainContext.gain.setValueAtTime(gainContext.gain.value, now);
+                gainContext.gain.linearRampToValueAtTime(0, now + 0.5);
                 if(gainContext.gain.value <= 0) gainContext.gain.value = 0;
             }
         }
