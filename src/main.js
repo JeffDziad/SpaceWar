@@ -422,7 +422,7 @@ window.onload = () => {
             this.wall_force = 1;
             this.initEvents();
             this.ammo = new Ammo(),
-            this.ess = new EnginegSoundSynth([50, 50, 52]);
+            this.ess = new EnginegSoundSynth([50, 52, 70, 72, 80, 82, 90, 92]);
 
             // weapons 
             this.projectiles = [];
