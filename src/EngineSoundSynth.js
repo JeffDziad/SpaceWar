@@ -66,7 +66,7 @@ class EnginegSoundSynth {
                 // let now = audioContext.currentTime;
                 // gainContext.gain.setValueAtTime(gainContext.gain.value, now);
                 // gainContext.gain.linearRampToValueAtTime(MAX_GAIN, now + 0.3);
-                this.waiting_restart = false;
+                //this.waiting_restart = false;
             } else {
                 this.last_thrust = performance.now();
                 this.rev_value += this.rev_acc;
